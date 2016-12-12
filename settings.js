@@ -17,6 +17,7 @@
 // The `https` setting requires the `fs` module. Uncomment the following
 // to make it available:
 //var fs = require("fs");
+const path = require('path')
 
 module.exports = {
   // the tcp port that the Node-RED web server is listening on
@@ -73,14 +74,14 @@ module.exports = {
   // By default, the Node-RED UI is available at http://localhost:1880/
   // The following property can be used to specifiy a different root path.
   // If set to false, this is disabled.
-  //httpAdminRoot: '/admin',
+  httpAdminRoot: '/admin',
 
   // Some nodes, such as HTTP In, can be used to listen for incoming http requests.
   // By default, these are served relative to '/'. The following property
   // can be used to specifiy a different root path. If set to false, this is
   // disabled.
-  //httpNodeRoot: '/red-nodes',
-
+  httpNodeRoot: '/',
+  coreNodesDir: path.join(__dirname, './nodes'),
   // When httpAdminRoot is used to move the UI to a different root path, the
   // following property can be used to identify a directory of static content
   // that should be served at http://localhost:1880/.
@@ -132,7 +133,7 @@ module.exports = {
   // The following property can be used to disable the editor. The admin API
   // is not affected by this option. To disable both the editor and the admin
   // API, use either the httpRoot or httpAdminRoot properties
-  //disableEditor: false,
+  disableEditor: false,
 
   // The following property can be used to configure cross-origin resource sharing
   // in the HTTP nodes.

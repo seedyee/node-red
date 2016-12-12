@@ -14,84 +14,69 @@
  * limitations under the License.
  **/
 
-var fs = require("fs");
-var path = require('path');
+const fs = require('fs')
+const path = require('path')
 
-var runtime = require("./runtime");
-var api = require("./api");
+const runtime = require('./runtime')
+const api = require('./api')
 
-process.env.NODE_RED_HOME = process.env.NODE_RED_HOME || path.resolve(__dirname+"/..");
+process.env.NODE_RED_HOME = process.env.NODE_RED_HOME || path.join(__dirname, '..')
 
-var nodeApp = null;
-var adminApp = null;
-var server = null;
-var apiEnabled = false;
+let nodeApp = null
+let adminApp = null
+let server = null
+let apiEnabled = false
 
 function checkBuild() {
-    var editorFile = path.resolve(path.join(__dirname,"..","public","red","red.min.js"));
-    try {
-        var stats = fs.statSync(editorFile);
-    } catch(err) {
-        var e = new Error("Node-RED not built");
-        e.code = "not_built";
-        throw e;
-    }
+  const editorFile = path.join(__dirname,'../public/red/red.min.js')
+  try {
+    const stats = fs.statSync(editorFile)
+  } catch(err) {
+    const e = new Error('Node-RED not built')
+    e.code = 'not_built'
+    throw e
+  }
 }
 
 module.exports = {
-    init: function(httpServer,userSettings) {
-        if (!userSettings) {
-            userSettings = httpServer;
-            httpServer = null;
-        }
+  init: function(httpServer, userSettings = {}) {
+    runtime.init(userSettings, api)
+    api.init(httpServer, runtime)
+    apiEnabled = true
+    adminApp = runtime.adminApi.adminApp
+    nodeApp = runtime.adminApi.nodeApp
+    server = runtime.adminApi.server
+    return
+  },
+  start: function() {
+    return runtime.start().then(function() {
+      if (apiEnabled) {
+        return api.start()
+      }
+    })
+  },
+  stop: function() {
+    return runtime.stop().then(function() {
+      if (apiEnabled) {
+        return api.stop()
+      }
+    })
+  },
+  nodes: runtime.nodes,
+  log: runtime.log,
+  settings:runtime.settings,
+  util: runtime.util,
+  version: runtime.version,
 
-        if (!userSettings.SKIP_BUILD_CHECK) {
-            checkBuild();
-        }
+  comms: api.comms,
+  library: api.library,
+  auth: api.auth,
 
-        if (!userSettings.coreNodesDir) {
-            userSettings.coreNodesDir = path.resolve(path.join(__dirname,"..","nodes"));
-        }
-
-        if (userSettings.httpAdminRoot !== false || userSettings.httpNodeRoot !== false) {
-            runtime.init(userSettings,api);
-            api.init(httpServer,runtime);
-            apiEnabled = true;
-        } else {
-            runtime.init(userSettings);
-            apiEnabled = false;
-        }
-        adminApp = runtime.adminApi.adminApp;
-        nodeApp = runtime.adminApi.nodeApp;
-        server = runtime.adminApi.server;
-        return;
-    },
-    start: function() {
-        return runtime.start().then(function() {
-            if (apiEnabled) {
-                return api.start();
-            }
-        });
-    },
-    stop: function() {
-        return runtime.stop().then(function() {
-            if (apiEnabled) {
-                return api.stop();
-            }
-        })
-    },
-    nodes: runtime.nodes,
-    log: runtime.log,
-    settings:runtime.settings,
-    util: runtime.util,
-    version: runtime.version,
-
-    comms: api.comms,
-    library: api.library,
-    auth: api.auth,
-
-    get app() { console.log("Deprecated use of RED.app - use RED.httpAdmin instead"); return runtime.app },
-    get httpAdmin() { return adminApp },
-    get httpNode() { return nodeApp },
-    get server() { return server }
-};
+  get app() {
+    console.log('Deprecated use of RED.app - use RED.httpAdmin instead')
+    return runtime.app
+  },
+  get httpAdmin() { return adminApp },
+  get httpNode() { return nodeApp },
+  get server() { return server },
+}

@@ -63,19 +63,11 @@ function formatRoot(root) {
 }
 
 settings.httpRoot = settings.httpRoot || '/'
-settings.disableEditor = settings.disableEditor || false
-
-if (settings.httpAdminRoot !== false) {
-  settings.httpAdminRoot = formatRoot(settings.httpAdminRoot || settings.httpRoot || '/')
-  settings.httpAdminAuth = settings.httpAdminAuth || settings.httpAuth
-} else {
-  settings.disableEditor = true
-}
-
-if (settings.httpNodeRoot !== false) {
-  settings.httpNodeRoot = formatRoot(settings.httpNodeRoot || settings.httpRoot || '/')
-  settings.httpNodeAuth = settings.httpNodeAuth || settings.httpAuth
-}
+settings.disableEditor = settings.disableEditor
+settings.httpAdminRoot = formatRoot(settings.httpAdminRoot)
+settings.httpAdminAuth = settings.httpAdminAuth || settings.httpAuth
+settings.httpNodeRoot = formatRoot(settings.httpNodeRoot)
+settings.httpNodeAuth = settings.httpNodeAuth || settings.httpAuth
 
 try {
   RED.init(server,settings)
@@ -116,15 +108,12 @@ function basicAuthMiddleware(user,pass) {
   }
 }
 
-if (settings.httpAdminRoot !== false) {
-  app.use(settings.httpAdminRoot,RED.httpAdmin)
-}
-if (settings.httpNodeRoot !== false && settings.httpNodeAuth) {
+app.use(settings.httpAdminRoot, RED.httpAdmin)
+if (settings.httpNodeAuth) {
   app.use(settings.httpNodeRoot,basicAuthMiddleware(settings.httpNodeAuth.user,settings.httpNodeAuth.pass))
 }
-if (settings.httpNodeRoot !== false) {
-  app.use(settings.httpNodeRoot,RED.httpNode)
-}
+app.use(settings.httpNodeRoot, RED.httpNode)
+
 if (settings.httpStatic) {
   settings.httpStaticAuth = settings.httpStaticAuth || settings.httpAuth
   if (settings.httpStaticAuth) {
@@ -160,7 +149,7 @@ RED.start().then(function() {
         RED.log.info(RED.log._('server.admin-ui-disabled'))
       }
       process.title = 'node-red'
-      RED.log.info(RED.log._('server.now-running', {listenpath:getListenPath()}))
+      RED.log.info(RED.log._('server.now-running', { listenpath:getListenPath() }))
     })
   } else {
     RED.log.info(RED.log._('server.headless-mode'))
@@ -170,7 +159,7 @@ RED.start().then(function() {
   RED.log.error(err.stack || err)
 })
 
-process.on('uncaughtException',function(err) {
+process.on('uncaughtException', function(err) {
   util.log('[red] Uncaught Exception:')
   util.log(err.stack || err)
   process.exit(1)
