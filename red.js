@@ -24,9 +24,10 @@ const path = require('path')
 const fs = require('fs-extra')
 const RED = require('./red/red.js')
 
+process.title = 'node-red'
 let server
+let listenPath
 const app = express()
-
 const settingsFile = path.join(__dirname, './settings.js')
 let settings
 
@@ -44,6 +45,8 @@ try {
   }
   process.exit()
 }
+
+listenPath = `${settings.https ? https : http}://${settings.uiHost}:${settings.uiPort}${settings.httpAdminRoot}`
 
 if (settings.https) {
   server = https.createServer(settings.https, app)
@@ -91,7 +94,7 @@ function basicAuthMiddleware(user,pass) {
     }
   } else {
     checkPassword = function(p) {
-      return bcrypt.compareSync(p,pass)
+      return bcrypt.compareSync(p, pass)
     }
   }
 
@@ -99,7 +102,7 @@ function basicAuthMiddleware(user,pass) {
     if (req.method === 'OPTIONS') {
       return next()
     }
-    var requestUser = basicAuth(req)
+    const requestUser = basicAuth(req)
     if (!requestUser || requestUser.name !== user || !checkPassword(requestUser.pass)) {
       res.set('WWW-Authenticate', 'Basic realm=Authorization Required')
       return res.sendStatus(401)
@@ -122,34 +125,20 @@ if (settings.httpStatic) {
   app.use('/', express.static(settings.httpStatic))
 }
 
-function getListenPath() {
-  let listenPath = `${settings.https ? https : http}://${settings.uiHost}:${settings.uiPort}`
-  if (settings.httpAdminRoot !== false) {
-    listenPath += settings.httpAdminRoot
-  } else if (settings.httpStatic) {
-    listenPath += '/'
-  }
-  return listenPath
-}
 
 RED.start().then(function() {
   if (settings.httpAdminRoot !== false || settings.httpNodeRoot !== false || settings.httpStatic) {
     server.on('error', function(err) {
       if (err.errno === 'EADDRINUSE') {
-        RED.log.error(RED.log._('server.unable-to-listen', { listenpath: getListenPath() }))
-        RED.log.error(RED.log._('server.port-in-use'))
+        RED.log.error(RED.log._('server.unable-to-listen', { listenPath }))
       } else {
         RED.log.error(RED.log._('server.uncaught-exception'))
         RED.log.error(err.stack || err)
       }
       process.exit(1)
     })
-    server.listen(settings.uiPort,settings.uiHost,function() {
-      if (settings.httpAdminRoot === false) {
-        RED.log.info(RED.log._('server.admin-ui-disabled'))
-      }
-      process.title = 'node-red'
-      RED.log.info(RED.log._('server.now-running', { listenpath:getListenPath() }))
+    server.listen(settings.uiPort, settings.uiHost, function() {
+      RED.log.info(RED.log._('server.now-running', { listenPath }))
     })
   } else {
     RED.log.info(RED.log._('server.headless-mode'))
