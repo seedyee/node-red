@@ -20,6 +20,7 @@ const path = require('path')
 const runtime = require('./runtime')
 const api = require('./api')
 
+process.title = 'node-red'
 process.env.NODE_RED_HOME = process.env.NODE_RED_HOME || path.join(__dirname, '..')
 
 let nodeApp = null
@@ -72,10 +73,6 @@ module.exports = {
   library: api.library,
   auth: api.auth,
 
-  get app() {
-    console.log('Deprecated use of RED.app - use RED.httpAdmin instead')
-    return runtime.app
-  },
   get httpAdmin() { return adminApp },
   get httpNode() { return nodeApp },
   get server() { return server },

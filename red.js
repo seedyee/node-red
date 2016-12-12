@@ -24,9 +24,8 @@ const path = require('path')
 const fs = require('fs-extra')
 const RED = require('./red/red.js')
 
-process.title = 'node-red'
 let server
-let listenPath
+let listenpath
 const app = express()
 const settingsFile = path.join(__dirname, './settings.js')
 let settings
@@ -46,8 +45,9 @@ try {
   process.exit()
 }
 
-listenPath = `${settings.https ? https : http}://${settings.uiHost}:${settings.uiPort}${settings.httpAdminRoot}`
+listenpath = `${settings.https ? 'https' : 'http'}://${settings.uiHost}:${settings.uiPort}${settings.httpEditorRoot}`
 
+console.log(listenpath)
 if (settings.https) {
   server = https.createServer(settings.https, app)
 } else {
@@ -65,9 +65,8 @@ function formatRoot(root) {
   return root
 }
 
-settings.httpRoot = settings.httpRoot || '/'
 settings.disableEditor = settings.disableEditor
-settings.httpAdminRoot = formatRoot(settings.httpAdminRoot)
+settings.httpEditorRoot = formatRoot(settings.httpEditorRoot)
 settings.httpAdminAuth = settings.httpAdminAuth || settings.httpAuth
 settings.httpNodeRoot = formatRoot(settings.httpNodeRoot)
 settings.httpNodeAuth = settings.httpNodeAuth || settings.httpAuth
@@ -111,7 +110,7 @@ function basicAuthMiddleware(user,pass) {
   }
 }
 
-app.use(settings.httpAdminRoot, RED.httpAdmin)
+app.use(settings.httpEditorRoot, RED.httpAdmin)
 if (settings.httpNodeAuth) {
   app.use(settings.httpNodeRoot,basicAuthMiddleware(settings.httpNodeAuth.user,settings.httpNodeAuth.pass))
 }
@@ -127,22 +126,18 @@ if (settings.httpStatic) {
 
 
 RED.start().then(function() {
-  if (settings.httpAdminRoot !== false || settings.httpNodeRoot !== false || settings.httpStatic) {
-    server.on('error', function(err) {
-      if (err.errno === 'EADDRINUSE') {
-        RED.log.error(RED.log._('server.unable-to-listen', { listenPath }))
-      } else {
-        RED.log.error(RED.log._('server.uncaught-exception'))
-        RED.log.error(err.stack || err)
-      }
-      process.exit(1)
-    })
-    server.listen(settings.uiPort, settings.uiHost, function() {
-      RED.log.info(RED.log._('server.now-running', { listenPath }))
-    })
-  } else {
-    RED.log.info(RED.log._('server.headless-mode'))
-  }
+  server.on('error', function(err) {
+    if (err.errno === 'EADDRINUSE') {
+      RED.log.error(RED.log._('server.unable-to-listen', { listenpath }))
+    } else {
+      RED.log.error(RED.log._('server.uncaught-exception'))
+      RED.log.error(err.stack || err)
+    }
+    process.exit(1)
+  })
+  server.listen(settings.uiPort, settings.uiHost, function() {
+    RED.log.info(RED.log._('server.now-running', { listenpath }))
+  })
 }).otherwise(function(err) {
   RED.log.error(RED.log._('server.failed-to-start'))
   RED.log.error(err.stack || err)
