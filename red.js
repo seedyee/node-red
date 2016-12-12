@@ -29,81 +29,8 @@ var RED = require("./red/red.js");
 var server;
 var app = express();
 
-var settingsFile;
+var settingsFile = path.join(__dirname, './settings.js');
 var flowFile;
-
-var knownOpts = {
-    "help": Boolean,
-    "port": Number,
-    "settings": [path],
-    "title": String,
-    "userDir": [path],
-    "verbose": Boolean
-};
-var shortHands = {
-    "?":["--help"],
-    "p":["--port"],
-    "s":["--settings"],
-    "t":["--help"],
-    "u":["--userDir"],
-    "v":["--verbose"]
-};
-nopt.invalidHandler = function(k,v,t) {
-    // TODO: console.log(k,v,t);
-}
-
-var parsedArgs = nopt(knownOpts,shortHands,process.argv,2)
-
-if (parsedArgs.help) {
-    console.log("Node-RED v"+RED.version());
-    console.log("Usage: node-red [-v] [-?] [--settings settings.js] [--userDir DIR]");
-    console.log("                [--port PORT] [--title TITLE] [flows.json]");
-    console.log("");
-    console.log("Options:");
-    console.log("  -p, --port     PORT  port to listen on");
-    console.log("  -s, --settings FILE  use specified settings file");
-    console.log("      --title    TITLE process window title");
-    console.log("  -u, --userDir  DIR   use specified user directory");
-    console.log("  -v, --verbose        enable verbose output");
-    console.log("  -?, --help           show this help");
-    console.log("");
-    console.log("Documentation can be found at http://nodered.org");
-    process.exit();
-}
-if (parsedArgs.argv.remain.length > 0) {
-    flowFile = parsedArgs.argv.remain[0];
-}
-
-if (parsedArgs.settings) {
-    // User-specified settings file
-    settingsFile = parsedArgs.settings;
-} else if (parsedArgs.userDir && fs.existsSync(path.join(parsedArgs.userDir,"settings.js"))) {
-    // User-specified userDir that contains a settings.js
-    settingsFile = path.join(parsedArgs.userDir,"settings.js");
-} else {
-    if (fs.existsSync(path.join(process.env.NODE_RED_HOME,".config.json"))) {
-        // NODE_RED_HOME contains user data - use its settings.js
-        settingsFile = path.join(process.env.NODE_RED_HOME,"settings.js");
-    } else {
-        var userDir = parsedArgs.userDir || path.join(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,".node-red");
-        var userSettingsFile = path.join(userDir,"settings.js");
-        if (fs.existsSync(userSettingsFile)) {
-            // $HOME/.node-red/settings.js exists
-            settingsFile = userSettingsFile;
-        } else {
-            var defaultSettings = path.join(__dirname,"settings.js");
-            var settingsStat = fs.statSync(defaultSettings);
-            if (settingsStat.mtime.getTime() < settingsStat.ctime.getTime()) {
-                // Default settings file has not been modified - safe to copy
-                fs.copySync(defaultSettings,userSettingsFile);
-                settingsFile = userSettingsFile;
-            } else {
-                // Use default settings.js as it has been modified
-                settingsFile = defaultSettings;
-            }
-        }
-    }
-}
 
 try {
     var settings = require(settingsFile);
@@ -118,10 +45,6 @@ try {
         console.log(err);
     }
     process.exit();
-}
-
-if (parsedArgs.v) {
-    settings.verbose = true;
 }
 
 if (settings.https) {
@@ -161,16 +84,12 @@ if (settings.httpNodeRoot !== false) {
     settings.httpNodeAuth = settings.httpNodeAuth || settings.httpAuth;
 }
 
-settings.uiPort = parsedArgs.port||settings.uiPort||1880;
+settings.uiPort = settings.uiPort||1880;
 settings.uiHost = settings.uiHost||"0.0.0.0";
 
 if (flowFile) {
     settings.flowFile = flowFile;
 }
-if (parsedArgs.userDir) {
-    settings.userDir = parsedArgs.userDir;
-}
-
 try {
     RED.init(server,settings);
 } catch(err) {
@@ -268,7 +187,7 @@ RED.start().then(function() {
             if (settings.httpAdminRoot === false) {
                 RED.log.info(RED.log._("server.admin-ui-disabled"));
             }
-            process.title = parsedArgs.title || 'node-red';
+            process.title = 'node-red';
             RED.log.info(RED.log._("server.now-running", {listenpath:getListenPath()}));
         });
     } else {
