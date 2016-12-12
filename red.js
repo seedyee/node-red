@@ -67,7 +67,6 @@ function formatRoot(root) {
 
 settings.disableEditor = settings.disableEditor
 settings.httpEditorRoot = formatRoot(settings.httpEditorRoot)
-settings.httpAdminAuth = settings.httpAdminAuth || settings.httpAuth
 settings.httpNodeRoot = formatRoot(settings.httpNodeRoot)
 settings.httpNodeAuth = settings.httpNodeAuth || settings.httpAuth
 
