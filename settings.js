@@ -92,7 +92,7 @@ module.exports = {
   //apiMaxLength: '5mb',
 
   // If you installed the optional node-red-dashboard you can set it's path
-  // relative to httpRoot
+  // relative to httpEditorRoot
   //ui: { path: "ui" },
 
   // Securing Node-RED

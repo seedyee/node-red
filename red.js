@@ -68,7 +68,7 @@ function formatRoot(root) {
 settings.disableEditor = settings.disableEditor
 settings.httpEditorRoot = formatRoot(settings.httpEditorRoot)
 settings.httpNodeRoot = formatRoot(settings.httpNodeRoot)
-settings.httpNodeAuth = settings.httpNodeAuth || settings.httpAuth
+settings.httpNodeAuth = settings.httpNodeAuth
 
 try {
   RED.init(server,settings)
@@ -116,7 +116,6 @@ if (settings.httpNodeAuth) {
 app.use(settings.httpNodeRoot, RED.httpNode)
 
 if (settings.httpStatic) {
-  settings.httpStaticAuth = settings.httpStaticAuth || settings.httpAuth
   if (settings.httpStaticAuth) {
     app.use('/', basicAuthMiddleware(settings.httpStaticAuth.user,settings.httpStaticAuth.pass))
   }
