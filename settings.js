@@ -20,12 +20,12 @@
 
 module.exports = {
   // the tcp port that the Node-RED web server is listening on
-  uiPort: process.env.PORT || 1880,
+  uiPort: process.env.UI_PORT || 1880,
 
   // By default, the Node-RED UI accepts connections on all IPv4 interfaces.
   // The following property can be used to listen on a specific interface. For
   // example, the following would only allow connections from the local machine.
-  //uiHost: "127.0.0.1",
+  uiHost: process.env.UI_HOST || '127.0.0.1',
 
   // Retry time in milliseconds for MQTT connections
   mqttReconnectTime: 15000,
@@ -81,10 +81,6 @@ module.exports = {
   // disabled.
   //httpNodeRoot: '/red-nodes',
 
-  // The following property can be used in place of 'httpAdminRoot' and 'httpNodeRoot',
-  // to apply the same root to both parts.
-  //httpRoot: '/red',
-
   // When httpAdminRoot is used to move the UI to a different root path, the
   // following property can be used to identify a directory of static content
   // that should be served at http://localhost:1880/.
@@ -103,11 +99,11 @@ module.exports = {
   // To password protect the Node-RED editor and admin API, the following
   // property can be used. See http://nodered.org/docs/security.html for details.
   //adminAuth: {
-  //    type: "credentials",
+  //    type: 'credentials',
   //    users: [{
-  //        username: "admin",
-  //        password: "$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN.",
-  //        permissions: "*"
+  //        username: 'admin',
+  //        password: '$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN.',
+  //        permissions: '*'
   //    }]
   //},
 
@@ -115,8 +111,8 @@ module.exports = {
   // the static content (httpStatic), the following properties can be used.
   // The pass field is a bcrypt hash of the password.
   // See http://nodered.org/docs/security.html#generating-the-password-hash
-  //httpNodeAuth: {user:"user",pass:"$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN."},
-  //httpStaticAuth: {user:"user",pass:"$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN."},
+  //httpNodeAuth: {user:'user',pass:'$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN.'},
+  //httpStaticAuth: {user:'user',pass:'$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN.'},
 
   // The following property can be used to enable HTTPS
   // See http://nodejs.org/api/https.html#https_https_createserver_options_requestlistener
@@ -143,8 +139,8 @@ module.exports = {
   // See https://github.com/troygoode/node-cors#configuration-options for
   // details on its contents. The following is a basic permissive set of options:
   //httpNodeCors: {
-  //    origin: "*",
-  //    methods: "GET,PUT,POST,DELETE"
+  //    origin: '*',
+  //    methods: 'GET,PUT,POST,DELETE'
   //},
 
   // If you need to set an http proxy please set an environment variable
@@ -174,8 +170,8 @@ module.exports = {
   functionGlobalContext: {
     // os:require('os'),
     // octalbonescript:require('octalbonescript'),
-    // jfive:require("johnny-five"),
-    // j5board:require("johnny-five").Board({repl:false})
+    // jfive:require('johnny-five'),
+    // j5board:require('johnny-five').Board({repl:false})
   },
 
   // The following property can be used to order the categories in the editor
@@ -195,7 +191,7 @@ module.exports = {
       // info - record information about the general running of the application + warn + error + fatal errors
       // debug - record information which is more verbose than info + info + warn + error + fatal errors
       // trace - record very detailed logging + debug + info + warn + error + fatal errors
-      level: "info",
+      level: 'info',
       // Whether or not to include metric events in the log output
       metrics: false,
       // Whether or not to include audit events in the log output
