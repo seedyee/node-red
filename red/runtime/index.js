@@ -1,7 +1,7 @@
 /**
  * Copyright 2013, 2016 IBM Corp.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -67,54 +67,54 @@ function start() {
              .then(function() { return storage.init(runtime)})
              .then(function() { return settings.load(storage)})
              .then(function() {
-               console.log(`\n\n${log._('runtime.welcome')}\n===================\n`);
-               log.info(log._('runtime.version', {component:'Node-RED', version:' v' + settings.version }));
-               log.info(log._('runtime.version', {component:'Node.js ', version: process.version }));
+               console.log(`\n\n${log._('runtime.welcome')}\n===================\n`)
+               log.info(log._('runtime.version', {component:'Node-RED', version:' v' + settings.version }))
+               log.info(log._('runtime.version', {component:'Node.js ', version: process.version }))
                return redNodes.load().then(function() {
-                 const nodeErrors = redNodes.getNodeList(function(n) { return n.err != null;});
-                 const nodeMissings = redNodes.getNodeList(n => n.module && n.enabled && !n.loaded && !n.err);
+                 const nodeErrors = redNodes.getNodeList(function(n) { return n.err != null})
+                 const nodeMissings = redNodes.getNodeList(n => n.module && n.enabled && !n.loaded && !n.err)
                  if (nodeErrors.length > 0) {
-                   log.warn('------------------------------------------------------');
+                   log.warn('------------------------------------------------------')
                    nodeErrors.forEach(err => {
                      log.warn(`[${err.name}] ${err.err}`)
                    })
-                   log.warn('------------------------------------------------------');
+                   log.warn('------------------------------------------------------')
                  }
                  if (nodeMissings.length > 0) {
-                   log.warn(log._('server.missing-modules'));
-                   const missingModules = {};
+                   log.warn(log._('server.missing-modules'))
+                   const missingModules = {}
                    nodeMissings.forEach(missing => {
                      missingModules[missing.module] = (missingModules[missing.module] || []).concat(missing.types)
                    })
                    const promises = []
                    for (let i in missingModules) {
                      if (missingModules.hasOwnProperty(i)) {
-                       log.warn(' - '+i+': '+missingModules[i].join(', '));
+                       log.warn(' - '+i+': '+missingModules[i].join(', '))
                        if (settings.autoInstallModules && i != 'node-red') {
                          redNodes.installModule(i).otherwise(function(err) {
                            // Error already reported. Need the otherwise handler
                            // to stop the error propagating any further
-                         });
+                         })
                        }
                      }
                    }
                    if (!settings.autoInstallModules) {
-                     log.info(log._('server.removing-modules'));
-                     redNodes.cleanModuleList();
+                     log.info(log._('server.removing-modules'))
+                     redNodes.cleanModuleList()
                    }
                  }
-                 log.info(log._('runtime.paths.settings', { path:settings.settingsFile }));
-                 redNodes.loadFlows().then(redNodes.startFlows);
-                 started = true;
+                 log.info(log._('runtime.paths.settings', { path:settings.settingsFile }))
+                 redNodes.loadFlows().then(redNodes.startFlows)
+                 started = true
                }).otherwise(function(err) {
-                 console.log(err);
-               });
-             });
+                 console.log(err)
+               })
+             })
 }
 
 function stop() {
-  started = false;
-  return redNodes.stopFlows();
+  started = false
+  return redNodes.stopFlows()
 }
 
 var runtime = module.exports = {
