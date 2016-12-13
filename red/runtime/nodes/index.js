@@ -14,23 +14,23 @@
  * limitations under the License.
  **/
 
-var when = require('when')
-var path = require('path')
-var fs = require('fs')
+const when = require('when')
+const path = require('path')
+const fs = require('fs')
 
-var registry = require('./registry')
-var credentials = require('./credentials')
-var flows = require('./flows')
-var flowUtil = require('./flows/util')
-var context = require('./context')
-var Node = require('./Node')
-var log = require('../log')
+const registry = require('./registry')
+const credentials = require('./credentials')
+const flows = require('./flows')
+const flowUtil = require('./flows/util')
+const context = require('./context')
+const Node = require('./Node')
+const log = require('../log')
 
-var events = require('../events')
+const events = require('../events')
 
-var child_process = require('child_process')
+const child_process = require('child_process')
 
-var settings
+let settings
 
 /**
  * Registers a node constructor
@@ -61,9 +61,9 @@ function registerType(nodeSet, type, constructor, opts) {
  * @param node the node object being created
  * @param def the instance definition for the node
  */
-function createNode(node,def) {
-  Node.call(node,def)
-  var id = node.id
+function createNode(node, def) {
+  Node.call(node, def)
+  let id = node.id
   if (def._alias) {
     id = def._alias
   }
@@ -73,7 +73,7 @@ function createNode(node,def) {
     // allow $(foo) syntax to substitute env variables for credentials also...
     for (var p in creds) {
       if (creds.hasOwnProperty(p)) {
-        flowUtil.mapEnvVarProperties(creds,p)
+        flowUtil.mapEnvVarProperties(creds, p)
       }
     }
     node.credentials = creds
