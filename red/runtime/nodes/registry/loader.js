@@ -108,52 +108,21 @@ function createNodeApi(node) {
   return red;
 }
 
-
 function loadNodeFiles(nodeFiles) {
-  const promises = [];
-  let redVersion
-  for (let module in nodeFiles) {
-    redVersion = nodeFiles[module].redVersion
-    if (nodeFiles.hasOwnProperty(module)) {
-      if (redVersion && !semver.satisfies(runtime.version().replace('-git',''), redVersion)) {
-        runtime.log.warn('['+module+'] '+runtime.log._('server.node-version-mismatch',{version:nodeFiles[module].redVersion}));
-        continue;
-      }
-      if (module === 'node-red' || !registry.getModuleInfo(module)) {
-        var first = true;
-        for (var node in nodeFiles[module].nodes) {
-          if (nodeFiles[module].nodes.hasOwnProperty(node)) {
-            if (module != 'node-red' && first) {
-              // Check the module directory exists
-              first = false;
-              var fn = nodeFiles[module].nodes[node].file;
-              var parts = fn.split('/');
-              var i = parts.length-1;
-              for (;i>=0;i--) {
-                if (parts[i] == 'node_modules') {
-                  break;
-                }
-              }
-              var moduleFn = parts.slice(0,i+2).join('/');
-
-              try {
-                var stat = fs.statSync(moduleFn);
-              } catch(err) {
-                // Module not found, don't attempt to load its nodes
-                break;
-              }
-            }
-
-            try {
-              promises.push(loadNodeConfig(nodeFiles[module].nodes[node]))
-            } catch(err) {
-              //
-            }
-          }
+  const promises = []
+  forOwn(nodeFiles, (module, moduleKey) => {
+    if (moduleKey === 'node-red' || !registry.getModuleInfo(moduleKey)) {
+      const moduleNodes = module.nodes
+      forOwn(moduleNodes, (moduleNode) => {
+        try {
+          promises.push(loadNodeConfig(moduleNode))
+        } catch(err) {
+          //
         }
-      }
+      })
     }
-  }
+  })
+
   return when.settle(promises).then(function(results) {
     var nodes = results.map(function(r) {
       registry.addNodeSet(r.value.id,r.value,r.value.version);
@@ -213,7 +182,6 @@ function loadNodeConfig(fileInfo) {
         let match = null
 
         while ((match = regExp.exec(content)) !== null) {
-          console.log('--------------- match', match)
           types.push(match[2]);
         }
         node.types = types;
