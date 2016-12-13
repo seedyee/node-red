@@ -75,24 +75,23 @@ function start() {
                log.info(os.type()+' '+os.release()+' '+os.arch()+' '+os.endianness());
                return redNodes.load().then(function() {
 
-                 var i;
-                 var nodeErrors = redNodes.getNodeList(function(n) { return n.err!=null;});
-                 var nodeMissing = redNodes.getNodeList(function(n) { return n.module && n.enabled && !n.loaded && !n.err;});
+                 let i;
+                 const nodeErrors = redNodes.getNodeList(function(n) { return n.err!=null;});
+                 const nodeMissings = redNodes.getNodeList(function(n) { return n.module && n.enabled && !n.loaded && !n.err;});
                  if (nodeErrors.length > 0) {
                    log.warn('------------------------------------------------------');
-                   for (i=0;i<nodeErrors.length;i+=1) {
-                     log.warn('['+nodeErrors[i].name+'] '+nodeErrors[i].err);
-                   }
+                   nodeErrors.forEach(err => {
+                     log.warn(`[${err.name}] ${err.err}`)
+                   })
                    log.warn('------------------------------------------------------');
                  }
-                 if (nodeMissing.length > 0) {
+                 if (nodeMissings.length > 0) {
                    log.warn(log._('server.missing-modules'));
-                   var missingModules = {};
-                   for (i=0;i<nodeMissing.length;i++) {
-                     var missing = nodeMissing[i];
-                     missingModules[missing.module] = (missingModules[missing.module]||[]).concat(missing.types);
-                   }
-                   var promises = [];
+                   const missingModules = {};
+                   nodeMissings.forEach(missing => {
+                     missingModules[missing.module] = (missingModules[missing.module] || []).concat(missing.types)
+                   })
+                   const promises = [];
                    for (i in missingModules) {
                      if (missingModules.hasOwnProperty(i)) {
                        log.warn(' - '+i+': '+missingModules[i].join(', '));
