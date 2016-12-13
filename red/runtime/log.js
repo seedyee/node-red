@@ -124,7 +124,26 @@ var log = module.exports = {
   metric: function() {
     return metricsEnabled
   },
+  reportMetrics() {
+    if (!metricsEnabled) return
+    var memUsage = process.memoryUsage();
 
+    log.log({
+      level: log.METRIC,
+      event: 'runtime.memory.rss',
+      value: memUsage.rss,
+    });
+    log.log({
+      level: log.METRIC,
+      event: 'runtime.memory.heapTotal',
+      value: memUsage.heapTotal,
+    });
+    log.log({
+      level: log.METRIC,
+      event: 'runtime.memory.heapUsed',
+      value: memUsage.heapUsed,
+    })
+  },
   audit: function(msg,req) {
     msg.level = log.AUDIT
     if (req) {
