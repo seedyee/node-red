@@ -40,7 +40,7 @@ function checkBuild() {
 }
 
 module.exports = {
-  init: function(httpServer, userSettings = {}) {
+  init: function(httpServer, userSettings) {
     runtime.init(userSettings, api)
     api.init(httpServer, runtime)
     apiEnabled = true
@@ -63,6 +63,7 @@ module.exports = {
       }
     })
   },
+
   nodes: runtime.nodes,
   log: runtime.log,
   settings:runtime.settings,

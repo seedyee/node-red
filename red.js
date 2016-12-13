@@ -26,9 +26,9 @@ const RED = require('./red/red.js')
 
 let server
 let listenpath
+let settings
 const app = express()
 const settingsFile = path.join(__dirname, './settings.js')
-let settings
 
 try {
   settings = require(settingsFile)
@@ -47,7 +47,6 @@ try {
 
 listenpath = `${settings.https ? 'https' : 'http'}://${settings.uiHost}:${settings.uiPort}${settings.httpEditorRoot}`
 
-console.log(listenpath)
 if (settings.https) {
   server = https.createServer(settings.https, app)
 } else {
@@ -82,7 +81,7 @@ try {
   process.exit(1)
 }
 
-function basicAuthMiddleware(user,pass) {
+function basicAuthMiddleware(user, pass) {
   var basicAuth = require('basic-auth')
   var checkPassword
   if (pass.length == '32') {
