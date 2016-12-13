@@ -43,69 +43,74 @@ function load(defaultNodesDir, disableNodePathScan) {
   return loadNodeFiles(nodeFiles);
 }
 
-function copyObjectProperties(src,dst,copyList,blockList) {
-  if (!src) {
-    return;
-  }
-  if (copyList && !blockList) {
-    copyList.forEach(function(i) {
-      if (src.hasOwnProperty(i)) {
-        var propDescriptor = Object.getOwnPropertyDescriptor(src,i);
-        Object.defineProperty(dst,i,propDescriptor);
-      }
-    });
-  } else if (!copyList && blockList) {
-    for (var i in src) {
-      if (src.hasOwnProperty(i) && blockList.indexOf(i) === -1) {
-        var propDescriptor = Object.getOwnPropertyDescriptor(src,i);
-        Object.defineProperty(dst,i,propDescriptor);
-      }
-    }
-  }
-}
-
 function createNodeApi(node) {
-  var red = {
-    nodes: {},
-    log: {},
+  const {
+    createNode,
+    getNode,
+    eachNode,
+    addCredentials,
+    getCredentials,
+    deleteCredentials,
+  } = runtime.nodes
+
+  const nodesApi = {
+    createNode,
+    getNode,
+    eachNode,
+    addCredentials,
+    getCredentials,
+    deleteCredentials,
+  }
+  const logApi = {
+    log,
+    info,
+    warn,
+    error,
+    trace,
+    debug,
+    metric,
+    audit,
+  } = runtime.log
+
+  const red = {
+    nodes: nodesApi,
+    log: logApi,
     settings: {},
     events: runtime.events,
     util: runtime.util,
     version: runtime.version,
   }
-  copyObjectProperties(runtime.nodes,red.nodes,['createNode','getNode','eachNode','addCredentials','getCredentials','deleteCredentials' ]);
   red.nodes.registerType = function(type,constructor,opts) {
     runtime.nodes.registerType(node.id,type,constructor,opts);
   }
-  copyObjectProperties(runtime.log,red.log,null,['init']);
-  copyObjectProperties(runtime.settings,red.settings,null,['init','load','reset']);
-  if (runtime.adminApi) {
-    red.comms = runtime.adminApi.comms;
-    red.library = runtime.adminApi.library;
-    red.auth = runtime.adminApi.auth;
-    red.httpAdmin = runtime.adminApi.adminApp;
-    red.httpNode = runtime.adminApi.nodeApp;
-    red.server = runtime.adminApi.server;
+  const adminApi = runtime.adminApi
+  if (adminApi) {
+    red.comms = adminApi.comms
+    red.library = adminApi.library
+    red.auth = adminApi.auth
+    red.httpAdmin = adminApi.adminApp
+    red.httpNode = adminApi.nodeApp
+    red.server = adminApi.server
   } else {
     red.comms = {
       publish: function() {}
-    };
+    }
     red.library = {
       register: function() {}
-    };
+    }
     red.auth = {
       needsPermission: function() {}
-    };
+    }
     // TODO: stub out httpAdmin/httpNode/server
   }
   red['_'] = function() {
-    var args = Array.prototype.slice.call(arguments, 0);
+    var args = Array.prototype.slice.call(arguments, 0)
     if (args[0].indexOf(':') === -1) {
-      args[0] = node.namespace+':'+args[0];
+      args[0] = node.namespace+':'+args[0]
     }
-    return runtime.i18n._.apply(null,args);
+    return runtime.i18n._.apply(null, args)
   }
-  return red;
+  return red
 }
 
 function loadNodeFiles(nodeFiles) {
@@ -250,18 +255,13 @@ function loadNodeConfig(fileInfo) {
  *
  */
 function loadNodeSet(node) {
-  console.log(node)
-  var nodeDir = path.dirname(node.file);
-  var nodeFn = path.basename(node.file);
-  if (!node.enabled) {
-    return when.resolve(node);
-  } else {
-  }
+  const nodeDir = path.dirname(node.file)
+  const nodeFn = path.basename(node.file)
+  if (!node.enabled) return when.resolve(node)
   try {
     var loadPromise = null;
     var r = require(node.file);
     if (typeof r === 'function') {
-
       var red = createNodeApi(node);
       var promise = r(red);
       if (promise != null && typeof promise.then === 'function') {
