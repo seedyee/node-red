@@ -1,7 +1,7 @@
 /**
  * Copyright 2015, 2016 IBM Corp.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,74 +14,71 @@
  * limitations under the License.
  **/
 
-//var UglifyJS = require("uglify-js");
-var util = require("util");
-var when = require("when");
-var events = require("../../events");
+const util = require('util')
+const when = require('when')
+const events = require('../../events')
 
-var settings;
+var settings
+var Node
+var loader
 
-var Node;
-
-var loader;
-
-var nodeConfigCache = null;
-var moduleConfigs = {};
-var nodeList = [];
-var nodeConstructors = {};
-var nodeTypeToId = {};
-var moduleNodes = {};
+var nodeConfigCache = null
+var moduleConfigs = {}
+var nodeList = []
+var nodeConstructors = {}
+var nodeTypeToId = {}
+var moduleNodes = {}
 
 function init(_settings, _loader) {
-  settings = _settings;
-  loader = _loader;
-  moduleNodes = {};
-  nodeTypeToId = {};
-  nodeConstructors = {};
-  nodeList = [];
-  nodeConfigCache = null;
-  Node = require("../Node");
+  settings = _settings
+  loader = _loader
+  moduleNodes = {}
+  nodeTypeToId = {}
+  nodeConstructors = {}
+  nodeList = []
+  nodeConfigCache = null
+  Node = require('../Node')
 }
 
 function load() {
   if (settings.available()) {
-    moduleConfigs = loadNodeConfigs();
+    moduleConfigs = loadNodeConfigs()
   } else {
-    moduleConfigs = {};
+    moduleConfigs = {}
   }
 }
 
 function filterNodeInfo(n) {
   var r = {
-    id: n.id||n.module+"/"+n.name,
+    id: n.id||n.module+'/'+n.name,
     name: n.name,
     types: n.types,
     enabled: n.enabled,
     local: n.local||false,
-  };
-  if (n.hasOwnProperty("module")) {
-    r.module = n.module;
   }
-  if (n.hasOwnProperty("err")) {
-    r.err = n.err.toString();
+  if (n.hasOwnProperty('module')) {
+    r.module = n.module
   }
-  return r;
+  if (n.hasOwnProperty('err')) {
+    r.err = n.err.toString()
+  }
+  return r
 }
 
 
 
 function getModule(id) {
-  var parts = id.split("/");
-  return parts.slice(0,parts.length-1).join("/");
+  var parts = id.split('/')
+  return parts.slice(0,parts.length-1).join('/')
 }
 
 function getNode(id) {
-  var parts = id.split("/");
-  return parts[parts.length-1];
+  var parts = id.split('/')
+  return parts[parts.length-1]
 }
 
 function saveNodeList() {
-  var moduleList = {};
+  var moduleList = {}
 
   for (var module in moduleConfigs) {
     /* istanbul ignore else */
@@ -93,420 +90,411 @@ function saveNodeList() {
             version: moduleConfigs[module].version,
             local: moduleConfigs[module].local||false,
             nodes: {}
-          };
+          }
         }
-        var nodes = moduleConfigs[module].nodes;
+        var nodes = moduleConfigs[module].nodes
         for(var node in nodes) {
           /* istanbul ignore else */
           if (nodes.hasOwnProperty(node)) {
-            var config = nodes[node];
-            var n = filterNodeInfo(config);
-            delete n.err;
-            delete n.file;
-            delete n.id;
-            n.file = config.file;
-            moduleList[module].nodes[node] = n;
+            var config = nodes[node]
+            var n = filterNodeInfo(config)
+            delete n.err
+            delete n.file
+            delete n.id
+            n.file = config.file
+            moduleList[module].nodes[node] = n
           }
         }
       }
     }
   }
   if (settings.available()) {
-    return settings.set("nodes",moduleList);
+    return settings.set('nodes',moduleList)
   } else {
-    return when.reject("Settings unavailable");
+    return when.reject('Settings unavailable')
   }
 }
 
 function loadNodeConfigs() {
-  var configs = settings.get("nodes");
+  var configs = settings.get('nodes')
 
   if (!configs) {
-    return {};
+    return {}
   } else if (configs['node-red']) {
-    return configs;
+    return configs
   } else {
     // Migrate from the 0.9.1 format of settings
-    var newConfigs = {};
+    var newConfigs = {}
     for (var id in configs) {
       /* istanbul ignore else */
       if (configs.hasOwnProperty(id)) {
-        var nodeConfig = configs[id];
-        var moduleName;
-        var nodeSetName;
+        var nodeConfig = configs[id]
+        var moduleName
+        var nodeSetName
 
         if (nodeConfig.module) {
-          moduleName = nodeConfig.module;
-          nodeSetName = nodeConfig.name.split(":")[1];
+          moduleName = nodeConfig.module
+          nodeSetName = nodeConfig.name.split(':')[1]
         } else {
-          moduleName = "node-red";
-          nodeSetName = nodeConfig.name.replace(/^\d+-/,"").replace(/\.js$/,"");
+          moduleName = 'node-red'
+          nodeSetName = nodeConfig.name.replace(/^\d+-/,'').replace(/\.js$/,'')
         }
 
         if (!newConfigs[moduleName]) {
           newConfigs[moduleName] = {
             name: moduleName,
             nodes:{}
-          };
+          }
         }
         newConfigs[moduleName].nodes[nodeSetName] = {
           name: nodeSetName,
           types: nodeConfig.types,
           enabled: nodeConfig.enabled,
           module: moduleName
-        };
+        }
       }
     }
-    settings.set("nodes",newConfigs);
-    return newConfigs;
+    settings.set('nodes',newConfigs)
+    return newConfigs
   }
 }
 
 function addNodeSet(id,set,version) {
   if (!set.err) {
     set.types.forEach(function(t) {
-      nodeTypeToId[t] = id;
-    });
+      nodeTypeToId[t] = id
+    })
   }
-  moduleNodes[set.module] = moduleNodes[set.module]||[];
-  moduleNodes[set.module].push(set.name);
+  moduleNodes[set.module] = moduleNodes[set.module]||[]
+  moduleNodes[set.module].push(set.name)
 
   if (!moduleConfigs[set.module]) {
     moduleConfigs[set.module] = {
       name: set.module,
       nodes: {}
-    };
+    }
   }
 
   if (version) {
-    moduleConfigs[set.module].version = version;
+    moduleConfigs[set.module].version = version
   }
-  moduleConfigs[set.module].local = set.local;
+  moduleConfigs[set.module].local = set.local
 
-  moduleConfigs[set.module].nodes[set.name] = set;
-  nodeList.push(id);
-  nodeConfigCache = null;
+  moduleConfigs[set.module].nodes[set.name] = set
+  nodeList.push(id)
+  nodeConfigCache = null
 }
 
 function removeNode(id) {
-  var config = moduleConfigs[getModule(id)].nodes[getNode(id)];
+  var config = moduleConfigs[getModule(id)].nodes[getNode(id)]
   if (!config) {
-    throw new Error("Unrecognised id: "+id);
+    throw new Error('Unrecognised id: '+id)
   }
-  delete moduleConfigs[getModule(id)].nodes[getNode(id)];
-  var i = nodeList.indexOf(id);
+  delete moduleConfigs[getModule(id)].nodes[getNode(id)]
+  var i = nodeList.indexOf(id)
   if (i > -1) {
-    nodeList.splice(i,1);
+    nodeList.splice(i,1)
   }
   config.types.forEach(function(t) {
-    var typeId = nodeTypeToId[t];
+    var typeId = nodeTypeToId[t]
     if (typeId === id) {
-      delete nodeConstructors[t];
-      delete nodeTypeToId[t];
+      delete nodeConstructors[t]
+      delete nodeTypeToId[t]
     }
-  });
-  config.enabled = false;
-  config.loaded = false;
-  nodeConfigCache = null;
-  return filterNodeInfo(config);
+  })
+  config.enabled = false
+  config.loaded = false
+  nodeConfigCache = null
+  return filterNodeInfo(config)
 }
 
 function removeModule(module) {
   if (!settings.available()) {
-    throw new Error("Settings unavailable");
+    throw new Error('Settings unavailable')
   }
-  var nodes = moduleNodes[module];
+  var nodes = moduleNodes[module]
   if (!nodes) {
-    throw new Error("Unrecognised module: "+module);
+    throw new Error('Unrecognised module: '+module)
   }
-  var infoList = [];
-  for (var i=0;i<nodes.length;i++) {
-    infoList.push(removeNode(module+"/"+nodes[i]));
-  }
-  delete moduleNodes[module];
-  delete moduleConfigs[module];
-  saveNodeList();
-  return infoList;
+  var infoList = []
+  nodes.forEach(node => {
+    infoList.push(removeNode(`${module}/${node}`))
+  })
+  delete moduleNodes[module]
+  delete moduleConfigs[module]
+  saveNodeList()
+  return infoList
 }
 
 function getNodeInfo(typeOrId) {
-  var id = typeOrId;
+  var id = typeOrId
   if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId];
+    id = nodeTypeToId[typeOrId]
   }
   /* istanbul ignore else */
   if (id) {
-    var module = moduleConfigs[getModule(id)];
+    var module = moduleConfigs[getModule(id)]
     if (module) {
-      var config = module.nodes[getNode(id)];
+      var config = module.nodes[getNode(id)]
       if (config) {
-        var info = filterNodeInfo(config);
-        if (config.hasOwnProperty("loaded")) {
-          info.loaded = config.loaded;
+        var info = filterNodeInfo(config)
+        if (config.hasOwnProperty('loaded')) {
+          info.loaded = config.loaded
         }
-        info.version = module.version;
-        return info;
+        info.version = module.version
+        return info
       }
     }
   }
-  return null;
+  return null
 }
 
 function getFullNodeInfo(typeOrId) {
   // Used by index.enableNodeSet so that .file can be retrieved to pass
   // to loader.loadNodeSet
-  var id = typeOrId;
+  var id = typeOrId
   if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId];
+    id = nodeTypeToId[typeOrId]
   }
   /* istanbul ignore else */
   if (id) {
-    var module = moduleConfigs[getModule(id)];
+    var module = moduleConfigs[getModule(id)]
     if (module) {
-      return module.nodes[getNode(id)];
+      return module.nodes[getNode(id)]
     }
   }
-  return null;
+  return null
 }
 
 function getNodeList(filter) {
-  var list = [];
+  var list = []
   for (var module in moduleConfigs) {
     /* istanbul ignore else */
     if (moduleConfigs.hasOwnProperty(module)) {
-      var nodes = moduleConfigs[module].nodes;
+      var nodes = moduleConfigs[module].nodes
       for (var node in nodes) {
         /* istanbul ignore else */
         if (nodes.hasOwnProperty(node)) {
-          var nodeInfo = filterNodeInfo(nodes[node]);
-          nodeInfo.version = moduleConfigs[module].version;
+          var nodeInfo = filterNodeInfo(nodes[node])
+          nodeInfo.version = moduleConfigs[module].version
           if (!filter || filter(nodes[node])) {
-            list.push(nodeInfo);
+            list.push(nodeInfo)
           }
         }
       }
     }
   }
-  return list;
+  return list
 }
 
 function getModuleList() {
-  //var list = [];
-  //for (var module in moduleNodes) {
-  //    /* istanbul ignore else */
-  //    if (moduleNodes.hasOwnProperty(module)) {
-  //        list.push(registry.getModuleInfo(module));
-  //    }
-  //}
-  //return list;
-  return moduleConfigs;
-
+  return moduleConfigs
 }
 
 function getModuleInfo(module) {
   if (moduleNodes[module]) {
-    var nodes = moduleNodes[module];
+    var nodes = moduleNodes[module]
     var m = {
       name: module,
       version: moduleConfigs[module].version,
       local: moduleConfigs[module].local,
-      nodes: []
-    };
-    for (var i = 0; i < nodes.length; ++i) {
-      var nodeInfo = filterNodeInfo(moduleConfigs[module].nodes[nodes[i]]);
-      nodeInfo.version = m.version;
-      m.nodes.push(nodeInfo);
+      nodes: [],
     }
-    return m;
+    nodes.forEach(node => {
+      const nodeInfo = filterNodeInfo(moduleConfigs[module].nodes[node])
+      nodeInfo.version = m.version
+      m.nodes.push(nodeInfo)
+    })
+    return m
   } else {
-    return null;
+    return null
   }
 }
 
 function getCaller(){
-  var orig = Error.prepareStackTrace;
-  Error.prepareStackTrace = function(_, stack){ return stack; };
-  var err = new Error();
-  Error.captureStackTrace(err, arguments.callee);
-  var stack = err.stack;
-  Error.prepareStackTrace = orig;
-  stack.shift();
-  stack.shift();
-  return stack[0].getFileName();
+  var orig = Error.prepareStackTrace
+  Error.prepareStackTrace = function(_, stack){ return stack }
+  var err = new Error()
+  Error.captureStackTrace(err, arguments.callee)
+  var stack = err.stack
+  Error.prepareStackTrace = orig
+  stack.shift()
+  stack.shift()
+  return stack[0].getFileName()
 }
 
 function inheritNode(constructor) {
   if(Object.getPrototypeOf(constructor.prototype) === Object.prototype) {
-    util.inherits(constructor,Node);
+    util.inherits(constructor,Node)
   } else {
-    var proto = constructor.prototype;
+    var proto = constructor.prototype
     while(Object.getPrototypeOf(proto) !== Object.prototype) {
-      proto = Object.getPrototypeOf(proto);
+      proto = Object.getPrototypeOf(proto)
     }
     //TODO: This is a partial implementation of util.inherits >= node v5.0.0
     //      which should be changed when support for node < v5.0.0 is dropped
     //      see: https://github.com/nodejs/node/pull/3455
-    proto.constructor.super_ = Node;
+    proto.constructor.super_ = Node
     if(Object.setPrototypeOf) {
-      Object.setPrototypeOf(proto, Node.prototype);
+      Object.setPrototypeOf(proto, Node.prototype)
     } else {
       // hack for node v0.10
-      proto.__proto__ = Node.prototype;
+      proto.__proto__ = Node.prototype
     }
   }
 }
 
 function registerNodeConstructor(nodeSet,type,constructor) {
   if (nodeConstructors.hasOwnProperty(type)) {
-    throw new Error(type+" already registered");
+    throw new Error(type+' already registered')
   }
   //TODO: Ensure type is known - but doing so will break some tests
   //      that don't have a way to register a node template ahead
   //      of registering the constructor
   if(!(constructor.prototype instanceof Node)) {
-    inheritNode(constructor);
+    inheritNode(constructor)
   }
 
-  var nodeSetInfo = getFullNodeInfo(nodeSet);
+  var nodeSetInfo = getFullNodeInfo(nodeSet)
   if (nodeSetInfo) {
     if (nodeSetInfo.types.indexOf(type) === -1) {
       // A type is being registered for a known set, but for some reason
       // we didn't spot it when parsing the HTML file.
       // Registered a type is the definitive action - not the presence
       // of an edit template. Ensure it is on the list of known types.
-      nodeSetInfo.types.push(type);
+      nodeSetInfo.types.push(type)
     }
   }
 
-  nodeConstructors[type] = constructor;
-  events.emit("type-registered",type);
+  nodeConstructors[type] = constructor
+  events.emit('type-registered',type)
 }
 
 function getAllNodeConfigs(lang) {
   if (!nodeConfigCache) {
-    var result = "";
-    var script = "";
-    for (var i=0;i<nodeList.length;i++) {
-      var id = nodeList[i];
-      var config = moduleConfigs[getModule(id)].nodes[getNode(id)];
+    var result = ''
+    var script = ''
+
+    nodeList.forEach(id => {
+      var config = moduleConfigs[getModule(id)].nodes[getNode(id)]
       if (config.enabled && !config.err) {
-        result += config.config;
-        result += loader.getNodeHelp(config,lang||"en-US")||"";
+        result += config.config
+        result += loader.getNodeHelp(config, lang||'en-US') || ''
       }
-    }
-    nodeConfigCache = result;
+    })
+    nodeConfigCache = result
   }
-  return nodeConfigCache;
+  return nodeConfigCache
 }
 
 function getNodeConfig(id,lang) {
-  var config = moduleConfigs[getModule(id)];
+  var config = moduleConfigs[getModule(id)]
   if (!config) {
-    return null;
+    return null
   }
-  config = config.nodes[getNode(id)];
+  config = config.nodes[getNode(id)]
   if (config) {
-    var result = config.config;
-    result += loader.getNodeHelp(config,lang||"en-US")
-    return result;
+    var result = config.config
+    result += loader.getNodeHelp(config,lang||'en-US')
+    return result
   } else {
-    return null;
+    return null
   }
 }
 
 function getNodeConstructor(type) {
-  var id = nodeTypeToId[type];
+  var id = nodeTypeToId[type]
 
-  var config;
-  if (typeof id === "undefined") {
-    config = undefined;
+  var config
+  if (typeof id === 'undefined') {
+    config = undefined
   } else {
-    config = moduleConfigs[getModule(id)].nodes[getNode(id)];
+    config = moduleConfigs[getModule(id)].nodes[getNode(id)]
   }
 
   if (!config || (config.enabled && !config.err)) {
-    return nodeConstructors[type];
+    return nodeConstructors[type]
   }
-  return null;
+  return null
 }
 
 function clear() {
-  nodeConfigCache = null;
-  moduleConfigs = {};
-  nodeList = [];
-  nodeConstructors = {};
-  nodeTypeToId = {};
+  nodeConfigCache = null
+  moduleConfigs = {}
+  nodeList = []
+  nodeConstructors = {}
+  nodeTypeToId = {}
 }
 
 function getTypeId(type) {
   if (nodeTypeToId.hasOwnProperty(type)) {
-    return nodeTypeToId[type];
+    return nodeTypeToId[type]
   } else {
-    return null;
+    return null
   }
 }
 
 function enableNodeSet(typeOrId) {
   if (!settings.available()) {
-    throw new Error("Settings unavailable");
+    throw new Error('Settings unavailable')
   }
 
-  var id = typeOrId;
+  var id = typeOrId
   if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId];
+    id = nodeTypeToId[typeOrId]
   }
-  var config;
+  var config
   try {
-    config = moduleConfigs[getModule(id)].nodes[getNode(id)];
-    delete config.err;
-    config.enabled = true;
-    nodeConfigCache = null;
+    config = moduleConfigs[getModule(id)].nodes[getNode(id)]
+    delete config.err
+    config.enabled = true
+    nodeConfigCache = null
     return saveNodeList().then(function() {
-      return filterNodeInfo(config);
-    });
+      return filterNodeInfo(config)
+    })
   } catch (err) {
-    throw new Error("Unrecognised id: "+typeOrId);
+    throw new Error('Unrecognised id: '+typeOrId)
   }
 }
 
 function disableNodeSet(typeOrId) {
   if (!settings.available()) {
-    throw new Error("Settings unavailable");
+    throw new Error('Settings unavailable')
   }
-  var id = typeOrId;
+  var id = typeOrId
   if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId];
+    id = nodeTypeToId[typeOrId]
   }
-  var config;
+  var config
   try {
-    config = moduleConfigs[getModule(id)].nodes[getNode(id)];
+    config = moduleConfigs[getModule(id)].nodes[getNode(id)]
     // TODO: persist setting
-    config.enabled = false;
-    nodeConfigCache = null;
+    config.enabled = false
+    nodeConfigCache = null
     return saveNodeList().then(function() {
-      return filterNodeInfo(config);
-    });
+      return filterNodeInfo(config)
+    })
   } catch (err) {
-    throw new Error("Unrecognised id: "+id);
+    throw new Error('Unrecognised id: '+id)
   }
 }
 
 function cleanModuleList() {
-  var removed = false;
+  var removed = false
   for (var mod in moduleConfigs) {
     /* istanbul ignore else */
     if (moduleConfigs.hasOwnProperty(mod)) {
-      var nodes = moduleConfigs[mod].nodes;
-      var node;
-      if (mod == "node-red") {
+      var nodes = moduleConfigs[mod].nodes
+      var node
+      if (mod == 'node-red') {
         // For core nodes, look for nodes that are enabled, !loaded and !errored
         for (node in nodes) {
           /* istanbul ignore else */
           if (nodes.hasOwnProperty(node)) {
-            var n = nodes[node];
+            var n = nodes[node]
             if (n.enabled && !n.err && !n.loaded) {
-              removeNode(mod+"/"+node);
-              removed = true;
+              removeNode(mod+'/'+node)
+              removed = true
             }
           }
         }
@@ -516,17 +504,17 @@ function cleanModuleList() {
           for (node in nodes) {
             /* istanbul ignore else */
             if (nodes.hasOwnProperty(node)) {
-              removeNode(mod+"/"+node);
-              removed = true;
+              removeNode(mod+'/'+node)
+              removed = true
             }
           }
-          delete moduleConfigs[mod];
+          delete moduleConfigs[mod]
         }
       }
     }
   }
   if (removed) {
-    saveNodeList();
+    saveNodeList()
   }
 }
 
@@ -561,5 +549,5 @@ var registry = module.exports = {
 
   saveNodeList: saveNodeList,
 
-  cleanModuleList: cleanModuleList
-};
+  cleanModuleList: cleanModuleList,
+}

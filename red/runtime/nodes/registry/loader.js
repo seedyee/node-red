@@ -14,22 +14,22 @@
  * limitations under the License.
  **/
 
-const when = require('when');
-const fs = require('fs');
-const path = require('path');
-const semver = require('semver');
+const when = require('when')
+const fs = require('fs')
+const path = require('path')
+const semver = require('semver')
 const forOwn = require('lodash/forOwn')
 
-const localfilesystem = require('./localfilesystem');
-const registry = require('./registry');
+const localfilesystem = require('./localfilesystem')
+const registry = require('./registry')
 
-var settings;
-var runtime;
+let settings
+let runtime
 
 function init(_runtime) {
-  runtime = _runtime;
-  settings = runtime.settings;
-  localfilesystem.init(runtime);
+  runtime = _runtime
+  settings = runtime.settings
+  localfilesystem.init(runtime)
 }
 
 function load(defaultNodesDir, disableNodePathScan) {
@@ -38,7 +38,6 @@ function load(defaultNodesDir, disableNodePathScan) {
   // performance gains are minimal.
   //return loadNodeFiles(registry.getModuleList());
   runtime.log.info(runtime.log._('server.loading'));
-
   var nodeFiles = localfilesystem.getNodeFiles(defaultNodesDir, disableNodePathScan);
   return loadNodeFiles(nodeFiles);
 }
@@ -146,13 +145,11 @@ function loadNodeConfig(fileInfo) {
 
   return when.promise(function(resolve) {
     if (info) {
-      if (info.hasOwnProperty('loaded')) {
-        throw new Error(`${file} already loaded`);
-      }
+      if (info.hasOwnProperty('loaded')) throw new Error(`${file} already loaded`)
       isEnabled = info.enabled
     }
 
-    var node = {
+    const node = {
       id: id,
       module: module,
       name: name,
