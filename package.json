@@ -10,7 +10,8 @@
     },
     "main": "red/red.js",
     "scripts": {
-        "start": "node red.js",
+        "start": "node --harmony red.js",
+        "nodemon": "nodemon --harmony red.js",
         "test": "grunt",
         "build": "grunt build"
     },
