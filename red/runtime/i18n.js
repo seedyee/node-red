@@ -14,32 +14,32 @@
  * limitations under the License.
  **/
 
-var i18n = require("i18next");
-var when = require("when");
-var path = require("path");
-var fs = require("fs");
+const i18n = require('i18next')
+const when = require('when')
+const path = require('path')
+const fs = require('fs')
 
-var defaultLang = "en-US";
+const defaultLang = 'en-US'
 
-var resourceMap = {};
-var resourceCache = {};
+let resourceMap = {}
+let resourceCache = {}
 
-function registerMessageCatalog(namespace,dir,file) {
-    return when.promise(function(resolve,reject) {
-        resourceMap[namespace] = { basedir:dir, file:file};
-        i18n.loadNamespace(namespace,function() {
-            resolve();
-        });
-    });
+function registerMessageCatalog(namespace, basedir, file) {
+    return when.promise(function(resolve, reject) {
+        resourceMap[namespace] = { basedir, file }
+        i18n.loadNamespace(namespace, function() {
+            resolve()
+        })
+    })
 }
 
-function mergeCatalog(fallback,catalog) {
+function mergeCatalog(fallback, catalog) {
     for (var k in fallback) {
         if (fallback.hasOwnProperty(k)) {
             if (!catalog[k]) {
-                catalog[k] = fallback[k];
+                catalog[k] = fallback[k]
             } else if (typeof fallback[k] === 'object') {
-                mergeCatalog(fallback[k],catalog[k]);
+                mergeCatalog(fallback[k],catalog[k])
             }
         }
     }
@@ -48,77 +48,77 @@ function mergeCatalog(fallback,catalog) {
 var MessageFileLoader = {
     fetchOne: function(lng, ns, callback) {
         if (resourceMap[ns]) {
-            var file = path.join(resourceMap[ns].basedir,lng,resourceMap[ns].file);
-            //console.log(file);
-            fs.readFile(file,"utf8",function(err,content) {
+            var file = path.join(resourceMap[ns].basedir,lng,resourceMap[ns].file)
+            //console.log(file)
+            fs.readFile(file,'utf8',function(err,content) {
                 if (err) {
-                    callback(err);
+                    callback(err)
                 } else {
                     try {
-                        resourceCache[ns] = resourceCache[ns]||{};
-                        resourceCache[ns][lng] = JSON.parse(content.replace(/^\uFEFF/, ''));
-                        //console.log(resourceCache[ns][lng]);
+                        resourceCache[ns] = resourceCache[ns]||{}
+                        resourceCache[ns][lng] = JSON.parse(content.replace(/^\uFEFF/, ''))
+                        //console.log(resourceCache[ns][lng])
                         if (lng !== defaultLang) {
-                            mergeCatalog(resourceCache[ns][defaultLang],resourceCache[ns][lng]);
+                            mergeCatalog(resourceCache[ns][defaultLang],resourceCache[ns][lng])
                         }
-                        callback(null, resourceCache[ns][lng]);
+                        callback(null, resourceCache[ns][lng])
                     } catch(e) {
-                        callback(e);
+                        callback(e)
                     }
                 }
-            });
+            })
         } else {
-            callback(new Error("Unrecognised namespace"));
+            callback(new Error('Unrecognised namespace'))
         }
     }
 
 }
 
 function init() {
-    return when.promise(function(resolve,reject) {
-        i18n.backend(MessageFileLoader);
+    return when.promise(function(resolve, reject) {
+        i18n.backend(MessageFileLoader)
         i18n.init({
             ns: {
                 namespaces: [],
-                defaultNs: "runtime"
+                defaultNs: 'runtime'
             },
             fallbackLng: [defaultLang]
         },function() {
-            resolve();
-        });
-    });
+            resolve()
+        })
+    })
 }
 
 function getCatalog(namespace,lang) {
-    var result = null;
+    var result = null
     if (resourceCache.hasOwnProperty(namespace)) {
-        result = resourceCache[namespace][lang];
+        result = resourceCache[namespace][lang]
         if (!result) {
-            var langParts = lang.split("-");
+            var langParts = lang.split('-')
             if (langParts.length == 2) {
-                result = resourceCache[namespace][langParts[0]];
+                result = resourceCache[namespace][langParts[0]]
             }
             if (!result) {
-                return resourceCache[namespace][defaultLang];
+                return resourceCache[namespace][defaultLang]
             }
         }
     }
-    return result;
+    return result
 }
 
-var obj = module.exports = {
+const obj = module.exports = {
     init: init,
     registerMessageCatalog: registerMessageCatalog,
     catalog: getCatalog,
     i: i18n,
-    defaultLang:defaultLang
+    defaultLang:defaultLang,
 }
 
 obj['_'] = function() {
-    //var opts = {};
+    //var opts = {}
     //if (def) {
-    //    opts.defaultValue = def;
+    //    opts.defaultValue = def
     //}
-    //console.log(arguments);
-    return i18n.t.apply(null,arguments);
+    //console.log(arguments)
+    return i18n.t.apply(null,arguments)
 }

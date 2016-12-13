@@ -49,7 +49,7 @@ let adminApi = {
     },
     adminApp: stubbedExpressApp,
     nodeApp: stubbedExpressApp,
-    server: {}
+    server: {},
 }
 
 function init(userSettings, _adminApi) {
@@ -65,7 +65,7 @@ function init(userSettings, _adminApi) {
 function start() {
     return i18n.init()
         .then(function() {
-            return i18n.registerMessageCatalog('runtime',path.resolve(path.join(__dirname,'locales')),'runtime.json')
+            return i18n.registerMessageCatalog('runtime', path.join(__dirname, 'locales'), 'runtime.json')
         })
         .then(function() { return storage.init(runtime)})
         .then(function() { return settings.load(storage)})
