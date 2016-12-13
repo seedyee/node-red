@@ -44,7 +44,6 @@ function LogHandler (settings) {
 
   metricsEnabled = metricsEnabled || this.metricsOn
 
-  this.handler = settings.handler ? settings.handler(settings) : consoleLogger
   this.on('log', function(msg) {
     if (this.shouldReportMessage(msg.level)) {
       this.handler(msg)
@@ -53,14 +52,7 @@ function LogHandler (settings) {
 }
 
 util.inherits(LogHandler, EventEmitter)
-
-LogHandler.prototype.shouldReportMessage = function(msglevel) {
-  return (msglevel == log.METRIC && this.metricsOn) ||
-         (msglevel == log.AUDIT && this.auditOn) ||
-         msglevel <= this.logLevel
-}
-
-function consoleLogger(msg) {
+LogHandler.prototype.handler = function (msg) {
   if (msg.level == log.METRIC || msg.level == log.AUDIT) {
     console.log(`${levelNames[msg.level]} : ${JSON.stringify(msg)}`)
   } else {
@@ -72,7 +64,16 @@ function consoleLogger(msg) {
   }
 }
 
+
+LogHandler.prototype.shouldReportMessage = function(msglevel) {
+  return (msglevel == log.METRIC && this.metricsOn) ||
+         (msglevel == log.AUDIT && this.auditOn) ||
+         msglevel <= this.logLevel
+}
+
+
 var log = module.exports = {
+  OFF:    1,
   FATAL:  10,
   ERROR:  20,
   WARN:   30,
@@ -81,7 +82,6 @@ var log = module.exports = {
   TRACE:  60,
   AUDIT:  98,
   METRIC: 99,
-
   init: function({ logging }) {
     metricsEnabled = false
     Object.keys(logging).forEach(key => {
