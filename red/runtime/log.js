@@ -34,23 +34,24 @@ const levels = {
 
 const levelNames = invert(levels)
 
-let logHandlers = []
+const logHandlers = []
 let metricsEnabled = false
 
 function LogHandler (settings) {
-  this.logLevel  = settings ? levels[settings.level] || levels.info : levels.info
-  this.metricsOn = settings ? settings.metrics || false : false
-  this.auditOn = settings ? settings.audit || false : false
+  this.logLevel = levels[settings.level] || levels.info
+  this.metricsOn = settings.metrics
+  this.auditOn = settings.audit
 
   metricsEnabled = metricsEnabled || this.metricsOn
 
-  this.handler   = (settings && settings.handler) ? settings.handler(settings) : consoleLogger
+  this.handler = settings.handler ? settings.handler(settings) : consoleLogger
   this.on('log', function(msg) {
     if (this.shouldReportMessage(msg.level)) {
       this.handler(msg)
     }
   })
 }
+
 util.inherits(LogHandler, EventEmitter)
 
 LogHandler.prototype.shouldReportMessage = function(msglevel) {
@@ -61,13 +62,13 @@ LogHandler.prototype.shouldReportMessage = function(msglevel) {
 
 function consoleLogger(msg) {
   if (msg.level == log.METRIC || msg.level == log.AUDIT) {
-    util.log('['+levelNames[msg.level]+'] '+JSON.stringify(msg))
+    console.log(`${levelNames[msg.level]} : ${JSON.stringify(msg)}`)
   } else {
     var message = msg.msg
     if (typeof message === 'object' && message.toString() === '[object Object]' && message.message) {
       message = message.message
     }
-    util.log('['+levelNames[msg.level]+'] '+(msg.type?'['+msg.type+':'+(msg.name||msg.id)+'] ':'')+message)
+    console.log('['+levelNames[msg.level]+'] '+(msg.type?'['+msg.type+':'+(msg.name||msg.id)+'] ':'')+message)
   }
 }
 
@@ -83,18 +84,12 @@ var log = module.exports = {
 
   init: function({ logging }) {
     metricsEnabled = false
-    var loggerSettings = {}
-    const keys = Object.keys(logging)
-    if (keys.length === 0) {
-      log.addHandler(new LogHandler())
-    } else {
-      keys.forEach(key => {
-        const config = logging[key]
-        if (key === 'console' || config.handler) {
-          log.addHandler(new LogHandler(config))
-        }
-      })
-    }
+    Object.keys(logging).forEach(key => {
+      const config = logging[key]
+      if (key === 'console') {
+        log.addHandler(new LogHandler(config))
+      }
+    })
   },
   addHandler: function(func) {
     logHandlers.push(func)
@@ -102,13 +97,13 @@ var log = module.exports = {
   removeHandler: function(func) {
     var index = logHandlers.indexOf(func)
     if (index > -1) {
-      logHandlers.splice(index,1)
+      logHandlers.splice(index, 1)
     }
   },
   log: function(msg) {
     msg.timestamp = Date.now()
     logHandlers.forEach(function(handler) {
-      handler.emit('log',msg)
+      handler.emit('log', msg)
     })
   },
   info: function(msg) {
