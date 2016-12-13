@@ -24,6 +24,8 @@ const path = require('path')
 const fs = require('fs-extra')
 const RED = require('./red/red.js')
 
+const { getVersion } = require('./red/utils')
+
 let server
 let listenpath
 let settings
@@ -32,7 +34,6 @@ const settingsFile = path.join(__dirname, './settings.js')
 
 try {
   settings = require(settingsFile)
-  settings.settingsFile = settingsFile
 } catch(err) {
   console.log('Error loading settings file: ${settingsFile}')
   if (err.code == 'MODULE_NOT_FOUND') {
@@ -45,6 +46,8 @@ try {
   process.exit()
 }
 
+settings.version = getVersion()
+settings.settingsFile = settingsFile
 listenpath = `${settings.https ? 'https' : 'http'}://${settings.uiHost}:${settings.uiPort}${settings.httpEditorRoot}`
 
 if (settings.https) {

@@ -14,29 +14,30 @@
  * limitations under the License.
  **/
 
-var when = require('when');
+const when = require('when')
 
-var redNodes = require("./nodes");
-var storage = require("./storage");
-var log = require("./log");
-var i18n = require("./i18n");
-var events = require("./events");
-var settings = require("./settings");
-var path = require('path');
-var fs = require("fs");
-var os = require("os");
+const redNodes = require('./nodes')
+const storage = require('./storage')
+const log = require('./log')
+const i18n = require('./i18n')
+const events = require('./events')
+const settings = require('./settings')
+const path = require('path')
+const fs = require('fs')
+const os = require('os')
 
-var runtimeMetricInterval = null;
+const { getVersion } = require('../utils')
 
-var started = false;
+let runtimeMetricInterval = null
+let started = false
 
-var stubbedExpressApp = {
+const stubbedExpressApp = {
     get: function() {},
     post: function() {},
     put: function() {},
-    delete: function() {}
+    delete: function() {},
 }
-var adminApi = {
+let adminApi = {
     library: {
         register: function() {}
     },
@@ -51,37 +52,20 @@ var adminApi = {
     server: {}
 }
 
-function init(userSettings,_adminApi) {
-    userSettings.version = getVersion();
-    log.init(userSettings);
-    settings.init(userSettings);
+function init(userSettings, _adminApi) {
+    log.init(userSettings)
+    settings.init(userSettings)
     if (_adminApi) {
-        adminApi = _adminApi;
+        adminApi = _adminApi
     }
-    redNodes.init(runtime);
+    redNodes.init(runtime)
 
-}
-
-var version;
-
-function getVersion() {
-    if (!version) {
-        version = require(path.join(__dirname,"..","..","package.json")).version;
-        /* istanbul ignore else */
-        try {
-            fs.statSync(path.join(__dirname,"..","..",".git"));
-            version += "-git";
-        } catch(err) {
-            // No git directory
-        }
-    }
-    return version;
 }
 
 function start() {
     return i18n.init()
         .then(function() {
-            return i18n.registerMessageCatalog("runtime",path.resolve(path.join(__dirname,"locales")),"runtime.json")
+            return i18n.registerMessageCatalog('runtime',path.resolve(path.join(__dirname,'locales')),'runtime.json')
         })
         .then(function() { return storage.init(runtime)})
         .then(function() { return settings.load(storage)})
@@ -92,26 +76,26 @@ function start() {
                     reportMetrics();
                 }, settings.runtimeMetricInterval||15000);
             }
-            console.log(`\n\n${log._("runtime.welcome")}\n===================\n`);
+            console.log(`\n\n${log._('runtime.welcome')}\n===================\n`);
             if (settings.version) {
-                log.info(log._("runtime.version",{component:"Node-RED",version:"v"+settings.version}));
+                log.info(log._('runtime.version',{component:'Node-RED',version:'v'+settings.version}));
             }
-            log.info(log._("runtime.version",{component:"Node.js ",version:process.version}));
-            log.info(os.type()+" "+os.release()+" "+os.arch()+" "+os.endianness());
+            log.info(log._('runtime.version',{component:'Node.js ',version:process.version}));
+            log.info(os.type()+' '+os.release()+' '+os.arch()+' '+os.endianness());
             return redNodes.load().then(function() {
 
                 var i;
                 var nodeErrors = redNodes.getNodeList(function(n) { return n.err!=null;});
                 var nodeMissing = redNodes.getNodeList(function(n) { return n.module && n.enabled && !n.loaded && !n.err;});
                 if (nodeErrors.length > 0) {
-                    log.warn("------------------------------------------------------");
+                    log.warn('------------------------------------------------------');
                     for (i=0;i<nodeErrors.length;i+=1) {
-                        log.warn("["+nodeErrors[i].name+"] "+nodeErrors[i].err);
+                        log.warn('['+nodeErrors[i].name+'] '+nodeErrors[i].err);
                     }
-                    log.warn("------------------------------------------------------");
+                    log.warn('------------------------------------------------------');
                 }
                 if (nodeMissing.length > 0) {
-                    log.warn(log._("server.missing-modules"));
+                    log.warn(log._('server.missing-modules'));
                     var missingModules = {};
                     for (i=0;i<nodeMissing.length;i++) {
                         var missing = nodeMissing[i];
@@ -120,8 +104,8 @@ function start() {
                     var promises = [];
                     for (i in missingModules) {
                         if (missingModules.hasOwnProperty(i)) {
-                            log.warn(" - "+i+": "+missingModules[i].join(", "));
-                            if (settings.autoInstallModules && i != "node-red") {
+                            log.warn(' - '+i+': '+missingModules[i].join(', '));
+                            if (settings.autoInstallModules && i != 'node-red') {
                                 redNodes.installModule(i).otherwise(function(err) {
                                     // Error already reported. Need the otherwise handler
                                     // to stop the error propagating any further
@@ -130,12 +114,12 @@ function start() {
                         }
                     }
                     if (!settings.autoInstallModules) {
-                        log.info(log._("server.removing-modules"));
+                        log.info(log._('server.removing-modules'));
                         redNodes.cleanModuleList();
                     }
                 }
                 if (settings.settingsFile) {
-                    log.info(log._("runtime.paths.settings",{path:settings.settingsFile}));
+                    log.info(log._('runtime.paths.settings',{path:settings.settingsFile}));
                 }
                 redNodes.loadFlows().then(redNodes.startFlows);
                 started = true;
@@ -150,17 +134,17 @@ function reportMetrics() {
 
     log.log({
         level: log.METRIC,
-        event: "runtime.memory.rss",
+        event: 'runtime.memory.rss',
         value: memUsage.rss
     });
     log.log({
         level: log.METRIC,
-        event: "runtime.memory.heapTotal",
+        event: 'runtime.memory.heapTotal',
         value: memUsage.heapTotal
     });
     log.log({
         level: log.METRIC,
-        event: "runtime.memory.heapUsed",
+        event: 'runtime.memory.heapUsed',
         value: memUsage.heapUsed
     });
 }
@@ -187,7 +171,7 @@ var runtime = module.exports = {
     storage: storage,
     events: events,
     nodes: redNodes,
-    util: require("./util"),
+    util: require('./util'),
     get adminApi() { return adminApi },
     isStarted: function() {
         return started;
