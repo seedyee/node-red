@@ -15,174 +15,171 @@
  **/
 
 
-var when = require('when');
-var path = require('path');
-var fs = require('fs');
+const when = require('when')
+const path = require('path')
+const fs = require('fs')
+const registry = require('./registry')
+const log = require('../../log')
+const events = require('../../events')
+const child_process = require('child_process')
+const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
-var registry = require('./registry');
-var log = require('../../log');
+let paletteEditorEnabled = false
+let settings
 
-var events = require('../../events');
-
-var child_process = require('child_process');
-var npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-var paletteEditorEnabled = false;
-
-var settings;
-
-var moduleRe = /^[^/]+$/;
-var slashRe = process.platform === 'win32' ? /\\|[/]/ : /[/]/;
+const moduleRe = /^[^/]+$/
+const slashRe = process.platform === 'win32' ? /\\|[/]/ : /[/]/
 
 function init(_settings) {
-  settings = _settings;
+  settings = _settings
 }
 
 function checkModulePath(folder) {
-  var moduleName;
-  var err;
-  var fullPath = path.resolve(folder);
-  var packageFile = path.join(fullPath,'package.json');
+  var moduleName
+  var err
+  var fullPath = path.resolve(folder)
+  var packageFile = path.join(fullPath,'package.json')
   try {
-    var pkg = require(packageFile);
-    moduleName = pkg.name;
+    var pkg = require(packageFile)
+    moduleName = pkg.name
     if (!pkg['node-red']) {
       // TODO: nls
-      err = new Error('Invalid Node-RED module');
-      err.code = 'invalid_module';
-      throw err;
+      err = new Error('Invalid Node-RED module')
+      err.code = 'invalid_module'
+      throw err
     }
   } catch(err2) {
-    err = new Error('Module not found');
-    err.code = 404;
-    throw err;
+    err = new Error('Module not found')
+    err.code = 404
+    throw err
   }
-  return moduleName;
+  return moduleName
 }
 
 function checkExistingModule(module) {
   if (registry.getModuleInfo(module)) {
     // TODO: nls
-    var err = new Error('Module already loaded');
-    err.code = 'module_already_loaded';
-    throw err;
+    var err = new Error('Module already loaded')
+    err.code = 'module_already_loaded'
+    throw err
   }
 }
 
 function installModule(module) {
   //TODO: ensure module is 'safe'
   return when.promise(function(resolve,reject) {
-    var installName = module;
+    var installName = module
 
     try {
       if (moduleRe.test(module)) {
         // Simple module name - assume it can be npm installed
       } else if (slashRe.test(module)) {
         // A path - check if there's a valid package.json
-        installName = module;
-        module = checkModulePath(module);
+        installName = module
+        module = checkModulePath(module)
       }
-      checkExistingModule(module);
+      checkExistingModule(module)
     } catch(err) {
-      return reject(err);
+      return reject(err)
     }
-    log.info(log._('server.install.installing',{name: module}));
+    log.info(log._('server.install.installing',{name: module}))
 
-    var installDir = settings.userDir || process.env.NODE_RED_HOME || '.';
+    var installDir = settings.userDir || process.env.NODE_RED_HOME || '.'
     var child = child_process.execFile(npmCommand,['install','--production',installName],
                                        {
                                          cwd: installDir
                                        },
                                        function(err, stdin, stdout) {
                                          if (err) {
-                                           var lookFor404 = new RegExp(' 404 .*'+installName+'$','m');
+                                           var lookFor404 = new RegExp(' 404 .*'+installName+'$','m')
                                            if (lookFor404.test(stdout)) {
-                                             log.warn(log._('server.install.install-failed-not-found',{name:module}));
-                                             var e = new Error('Module not found');
-                                             e.code = 404;
-                                             reject(e);
+                                             log.warn(log._('server.install.install-failed-not-found',{name:module}))
+                                             var e = new Error('Module not found')
+                                             e.code = 404
+                                             reject(e)
                                            } else {
-                                             log.warn(log._('server.install.install-failed-long',{name:module}));
-                                             log.warn('------------------------------------------');
-                                             log.warn(err.toString());
-                                             log.warn('------------------------------------------');
-                                             reject(new Error(log._('server.install.install-failed')));
+                                             log.warn(log._('server.install.install-failed-long',{name:module}))
+                                             log.warn('------------------------------------------')
+                                             log.warn(err.toString())
+                                             log.warn('------------------------------------------')
+                                             reject(new Error(log._('server.install.install-failed')))
                                            }
                                          } else {
-                                           log.info(log._('server.install.installed',{name:module}));
-                                           resolve(require('./index').addModule(module).then(reportAddedModules));
+                                           log.info(log._('server.install.installed',{name:module}))
+                                           resolve(require('./index').addModule(module).then(reportAddedModules))
                                          }
                                        }
-    );
-  });
+    )
+  })
 }
 
 
 function reportAddedModules(info) {
   //comms.publish('node/added',info.nodes,false);
   if (info.nodes.length > 0) {
-    log.info(log._('server.added-types'));
+    log.info(log._('server.added-types'))
     for (var i=0;i<info.nodes.length;i++) {
       for (var j=0;j<info.nodes[i].types.length;j++) {
         log.info(' - '+
-                     (info.nodes[i].module?info.nodes[i].module+':':'')+
+                      (info.nodes[i].module?info.nodes[i].module+':':'')+
                  info.nodes[i].types[j]+
-                     (info.nodes[i].err?' : '+info.nodes[i].err:'')
+                      (info.nodes[i].err?' : '+info.nodes[i].err:'')
         );
       }
     }
   }
-  return info;
+  return info
 }
 
 function reportRemovedModules(removedNodes) {
   //comms.publish('node/removed',removedNodes,false);
-  log.info(log._('server.removed-types'));
+  log.info(log._('server.removed-types'))
   for (var j=0;j<removedNodes.length;j++) {
     for (var i=0;i<removedNodes[j].types.length;i++) {
-      log.info(' - '+(removedNodes[j].module?removedNodes[j].module+':':'')+removedNodes[j].types[i]);
+      log.info(' - '+(removedNodes[j].module?removedNodes[j].module+':':'')+removedNodes[j].types[i])
     }
   }
-  return removedNodes;
+  return removedNodes
 }
 
 function uninstallModule(module) {
   return when.promise(function(resolve,reject) {
-    if (/[\s;]/.test(module)) {
-      reject(new Error(log._('server.install.invalid')));
-      return;
+    if (/[\s]/.test(module)) {
+      reject(new Error(log._('server.install.invalid')))
+      return
     }
-    var installDir = settings.userDir || process.env.NODE_RED_HOME || '.';
-    var moduleDir = path.join(installDir,'node_modules',module);
+    var installDir = settings.userDir || process.env.NODE_RED_HOME || '.'
+    var moduleDir = path.join(installDir,'node_modules',module)
 
     try {
-      fs.statSync(moduleDir);
+      fs.statSync(moduleDir)
     } catch(err) {
-      return reject(new Error(log._('server.install.uninstall-failed',{name:module})));
+      return reject(new Error(log._('server.install.uninstall-failed',{name:module})))
     }
 
-    var list = registry.removeModule(module);
-    log.info(log._('server.install.uninstalling',{name:module}));
+    var list = registry.removeModule(module)
+    log.info(log._('server.install.uninstalling',{name:module}))
     var child = child_process.execFile(npmCommand,['remove',module],
                                        {
                                          cwd: installDir
                                        },
                                        function(err, stdin, stdout) {
                                          if (err) {
-                                           log.warn(log._('server.install.uninstall-failed-long',{name:module}));
-                                           log.warn('------------------------------------------');
-                                           log.warn(err.toString());
-                                           log.warn('------------------------------------------');
-                                           reject(new Error(log._('server.install.uninstall-failed',{name:module})));
+                                           log.warn(log._('server.install.uninstall-failed-long',{name:module}))
+                                           log.warn('------------------------------------------')
+                                           log.warn(err.toString())
+                                           log.warn('------------------------------------------')
+                                           reject(new Error(log._('server.install.uninstall-failed',{name:module})))
                                          } else {
-                                           log.info(log._('server.install.uninstalled',{name:module}));
-                                           reportRemovedModules(list);
+                                           log.info(log._('server.install.uninstalled',{name:module}))
+                                           reportRemovedModules(list)
                                            // TODO: tidy up internal event names
                                            events.emit('node-module-uninstalled',module)
-                                           resolve(list);
+                                           resolve(list)
                                          }
                                        }
-    );
-  });
+    )
+  })
 }
 
 function checkPrereq() {
@@ -191,20 +188,20 @@ function checkPrereq() {
       settings.editorTheme.palette.hasOwnProperty('editable') &&
       settings.editorTheme.palette.editable === false
   ) {
-    log.info(log._('server.palette-editor.disabled'));
-    paletteEditorEnabled = false;
-    return when.resolve();
+    log.info(log._('server.palette-editor.disabled'))
+    paletteEditorEnabled = false
+    return when.resolve()
   } else {
     return when.promise(function(resolve) {
       child_process.execFile(npmCommand,['-v'],function(err) {
         if (err) {
-          log.info(log._('server.palette-editor.npm-not-found'));
-          paletteEditorEnabled = false;
+          log.info(log._('server.palette-editor.npm-not-found'))
+          paletteEditorEnabled = false
         } else {
-          paletteEditorEnabled = true;
+          paletteEditorEnabled = true
         }
-        resolve();
-      });
+        resolve()
+      })
     })
   }
 }
