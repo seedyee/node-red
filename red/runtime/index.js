@@ -24,12 +24,10 @@ const events = require('./events')
 const settings = require('./settings')
 const path = require('path')
 const fs = require('fs')
-const os = require('os')
 
 const { getVersion } = require('../utils')
 
 let started = false
-
 const stubbedExpressApp = {
   get: function() {},
   post: function() {},
@@ -70,14 +68,11 @@ function start() {
              .then(function() { return settings.load(storage)})
              .then(function() {
                console.log(`\n\n${log._('runtime.welcome')}\n===================\n`);
-               log.info(log._('runtime.version',{component:'Node-RED',version:'v'+settings.version}));
-               log.info(log._('runtime.version',{component:'Node.js ',version:process.version}));
-               log.info(os.type()+' '+os.release()+' '+os.arch()+' '+os.endianness());
+               log.info(log._('runtime.version', {component:'Node-RED', version:' v' + settings.version }));
+               log.info(log._('runtime.version', {component:'Node.js ', version: process.version }));
                return redNodes.load().then(function() {
-
-                 let i;
-                 const nodeErrors = redNodes.getNodeList(function(n) { return n.err!=null;});
-                 const nodeMissings = redNodes.getNodeList(function(n) { return n.module && n.enabled && !n.loaded && !n.err;});
+                 const nodeErrors = redNodes.getNodeList(function(n) { return n.err != null;});
+                 const nodeMissings = redNodes.getNodeList(n => n.module && n.enabled && !n.loaded && !n.err);
                  if (nodeErrors.length > 0) {
                    log.warn('------------------------------------------------------');
                    nodeErrors.forEach(err => {
@@ -91,8 +86,8 @@ function start() {
                    nodeMissings.forEach(missing => {
                      missingModules[missing.module] = (missingModules[missing.module] || []).concat(missing.types)
                    })
-                   const promises = [];
-                   for (i in missingModules) {
+                   const promises = []
+                   for (let i in missingModules) {
                      if (missingModules.hasOwnProperty(i)) {
                        log.warn(' - '+i+': '+missingModules[i].join(', '));
                        if (settings.autoInstallModules && i != 'node-red') {
@@ -108,9 +103,7 @@ function start() {
                      redNodes.cleanModuleList();
                    }
                  }
-                 if (settings.settingsFile) {
-                   log.info(log._('runtime.paths.settings',{path:settings.settingsFile}));
-                 }
+                 log.info(log._('runtime.paths.settings', { path:settings.settingsFile }));
                  redNodes.loadFlows().then(redNodes.startFlows);
                  started = true;
                }).otherwise(function(err) {
@@ -139,7 +132,5 @@ var runtime = module.exports = {
   nodes: redNodes,
   util: require('./util'),
   get adminApi() { return adminApi },
-  isStarted: function() {
-    return started
-  }
+  isStarted: () => started,
 }
