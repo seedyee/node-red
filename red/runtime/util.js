@@ -61,7 +61,7 @@ function cloneMessage(msg) {
     return m;
 }
 
-function compareObjects(obj1,obj2) {
+function compareObjects(obj1, obj2) {
     var i;
     if (obj1 === obj2) {
         return true;
