@@ -117,19 +117,20 @@ function loadNodeFiles(nodeFiles) {
         try {
           promises.push(loadNodeConfig(moduleNode))
         } catch(err) {
+          console.log(err)
           //
         }
       })
     }
   })
 
-  return when.settle(promises).then(function(results) {
-    var nodes = results.map(function(r) {
-      registry.addNodeSet(r.value.id,r.value,r.value.version);
-      return r.value;
-    });
-    return loadNodeSetList(nodes);
-  });
+  return when.all(promises).then(function(values) {
+    const nodes = values.map(function(value) {
+      registry.addNodeSet(value.id, value, value.version)
+      return value
+    })
+    return loadNodeSetList(nodes)
+  })
 }
 
 function loadNodeConfig(fileInfo) {
@@ -249,6 +250,7 @@ function loadNodeConfig(fileInfo) {
  *
  */
 function loadNodeSet(node) {
+  console.log(node)
   var nodeDir = path.dirname(node.file);
   var nodeFn = path.basename(node.file);
   if (!node.enabled) {

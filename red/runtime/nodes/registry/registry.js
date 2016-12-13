@@ -57,7 +57,7 @@ function filterNodeInfo(n) {
     name: n.name,
     types: n.types,
     enabled: n.enabled,
-    local: n.local||false
+    local: n.local||false,
   };
   if (n.hasOwnProperty("module")) {
     r.module = n.module;
@@ -392,14 +392,8 @@ function getAllNodeConfigs(lang) {
       if (config.enabled && !config.err) {
         result += config.config;
         result += loader.getNodeHelp(config,lang||"en-US")||"";
-        //script += config.script;
       }
     }
-    //if (script.length > 0) {
-    //    result += '<script type="text/javascript">';
-    //    result += UglifyJS.minify(script, {fromString: true}).code;
-    //    result += '</script>';
-    //}
     nodeConfigCache = result;
   }
   return nodeConfigCache;
@@ -414,10 +408,6 @@ function getNodeConfig(id,lang) {
   if (config) {
     var result = config.config;
     result += loader.getNodeHelp(config,lang||"en-US")
-
-    //if (config.script) {
-    //    result += '<script type="text/javascript">'+config.script+'</script>';
-    //}
     return result;
   } else {
     return null;
