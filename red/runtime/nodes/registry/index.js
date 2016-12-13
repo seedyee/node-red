@@ -29,7 +29,7 @@ function init(runtime) {
   settings = runtime.settings
   installer.init(runtime.settings)
   loader.init(runtime)
-  registry.init(settings,loader)
+  registry.init(settings, loader)
 }
 
 function load() {
