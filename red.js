@@ -70,7 +70,6 @@ function formatRoot(root) {
 settings.disableEditor = settings.disableEditor
 settings.httpEditorRoot = formatRoot(settings.httpEditorRoot)
 settings.httpNodeRoot = formatRoot(settings.httpNodeRoot)
-settings.httpNodeAuth = settings.httpNodeAuth
 
 try {
   RED.init(server,settings)
