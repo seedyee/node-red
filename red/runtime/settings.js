@@ -50,17 +50,17 @@ var persistentSettings = {
             return clone(userSettings[prop]);
         }
         if (globalSettings === null) {
-            throw new Error(log._("settings.not-available"));
+            throw new Error('settings.not-available');
         }
         return clone(globalSettings[prop]);
     },
 
     set: function(prop,value) {
         if (userSettings.hasOwnProperty(prop)) {
-            throw new Error(log._("settings.property-read-only", {prop:prop}));
+            throw new Error(`settings read-only prop: ${prop}`)
         }
         if (globalSettings === null) {
-            throw new Error(log._("settings.not-available"));
+            throw new Error('settings not-available');
         }
         var current = globalSettings[prop];
         globalSettings[prop] = value;
@@ -73,10 +73,10 @@ var persistentSettings = {
     },
     delete: function(prop) {
         if (userSettings.hasOwnProperty(prop)) {
-            throw new Error(log._("settings.property-read-only", {prop:prop}));
+            throw new Error(`settings read-only prop: ${prop}`)
         }
         if (globalSettings === null) {
-            throw new Error(log._("settings.not-available"));
+            throw new Error('settings not-available');
         }
         if (globalSettings.hasOwnProperty(prop)) {
             delete globalSettings[prop];

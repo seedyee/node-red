@@ -33,9 +33,7 @@ function init(_runtime) {
 }
 
 function load(defaultNodesDir, disableNodePathScan) {
-  runtime.log.info(runtime.log._('server.loading'))
   const nodeFiles = localfilesystem.getNodeFiles()
-  console.log(nodeFiles['node-red'].nodes.tail)
   return loadNodeFiles(nodeFiles)
 }
 
