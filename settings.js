@@ -19,14 +19,31 @@
 //var fs = require("fs");
 const path = require('path')
 
+process.title = 'node-red'
+process.env.NODE_RED_HOME = path.resolve(process.env.NODE_RED_HOME || __dirname)
+const uiPort = process.env.UI_PORT || 1880
+const uiHost = process.env.UI_HOST || '127.0.0.1'
+const userDir = path.resolve(process.env.USER_DIR || path.join(process.env.HOME, './.node-red'))
+
+const coreNodesDir = path.join(__dirname, './nodes')
+const userNodesDir = path.join(userDir, './nodes')
+const nodesDirList = [coreNodesDir, userNodesDir]
+
 module.exports = {
   // the tcp port that the Node-RED web server is listening on
-  uiPort: process.env.UI_PORT || 1880,
-
+  uiPort,
   // By default, the Node-RED UI accepts connections on all IPv4 interfaces.
   // The following property can be used to listen on a specific interface. For
   // example, the following would only allow connections from the local machine.
-  uiHost: process.env.UI_HOST || '127.0.0.1',
+  uiHost,
+
+  userDir,
+
+  // Node-RED scans the `nodes` directory in the install directory to find nodes.
+  // The following property can be used to specify an additional directory to scan.
+  //nodesDir: '/home/nol/.node-red/nodes',
+  coreNodesDir,
+  nodesDirList,
 
   // Retry time in milliseconds for MQTT connections
   mqttReconnectTime: 15000,
@@ -48,9 +65,6 @@ module.exports = {
   // The maximum length, in characters, of any message sent to the debug sidebar tab
   debugMaxLength: 1000,
 
-  // The file containing the flows. If not set, it defaults to flows_<hostname>.json
-  flowFile: 'flows.json',
-
   // To enabled pretty-printing of the flow within the flow file, set the following
   //  property to true:
   //flowFilePretty: true,
@@ -63,13 +77,14 @@ module.exports = {
   // lost.
   //credentialSecret: "a-secret-key",
 
-  // By default, all user data is stored in the Node-RED install directory. To
-  // use a different location, the following property can be used
-  //userDir: '/home/nol/.node-red/',
+  // The file containing the flows. If not set, it defaults to flows_<hostname>.json
+  flowFile: 'flows.json',
 
-  // Node-RED scans the `nodes` directory in the install directory to find nodes.
-  // The following property can be used to specify an additional directory to scan.
-  //nodesDir: '/home/nol/.node-red/nodes',
+  // When httpAdminRoot is used to move the UI to a different root path, the
+  // following property can be used to identify a directory of static content
+  // that should be served at http://localhost:1880/.
+  //httpStatic: '/home/nol/node-red-static/',
+
 
   // By default, the Node-RED UI is available at http://localhost:1880/
   // The following property can be used to specifiy a different root path.
@@ -81,11 +96,6 @@ module.exports = {
   // can be used to specifiy a different root path. If set to false, this is
   // disabled.
   httpNodeRoot: '/',
-  coreNodesDir: path.join(__dirname, './nodes'),
-  // When httpAdminRoot is used to move the UI to a different root path, the
-  // following property can be used to identify a directory of static content
-  // that should be served at http://localhost:1880/.
-  //httpStatic: '/home/nol/node-red-static/',
 
   // The maximum size of HTTP request that will be accepted by the runtime api.
   // Default: 5mb
