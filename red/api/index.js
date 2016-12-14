@@ -152,7 +152,7 @@ function init(_server, _runtime) {
   adminApp.get(new RegExp('/library/flows\/(.*)'), needsPermission('library.read'),library.get,errorHandler)
 
   // Settings
-  adminApp.get('/settings', needsPermission('settings.read'),info.settings,errorHandler)
+  adminApp.get('/settings', needsPermission('settings.read'), info.settings,errorHandler)
   // Error Handler
   //adminApp.use(errorHandler)
 }

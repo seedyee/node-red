@@ -13,42 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-var theme = require("./theme");
-var util = require('util');
-var runtime;
-var settings;
+const theme = require('./theme')
+const util = require('util')
+var runtime
+var settings
 
 module.exports = {
-    init: function(_runtime) {
-        runtime = _runtime;
-        settings = runtime.settings;
-    },
-    settings: function(req,res) {
-        var safeSettings = {
-            httpNodeRoot: settings.httpNodeRoot||"/",
-            version: settings.version,
-            user: req.user
-        }
-
-        var themeSettings = theme.settings();
-        if (themeSettings) {
-            safeSettings.editorTheme = themeSettings;
-        }
-
-        if (util.isArray(settings.paletteCategories)) {
-            safeSettings.paletteCategories = settings.paletteCategories;
-        }
-
-        if (settings.flowFilePretty) {
-            safeSettings.flowFilePretty = settings.flowFilePretty;
-        }
-        if (!runtime.nodes.paletteEditorEnabled()) {
-            safeSettings.editorTheme = safeSettings.editorTheme || {};
-            safeSettings.editorTheme.palette = safeSettings.editorTheme.palette || {};
-            safeSettings.editorTheme.palette.editable = false;
-        }
-
-
-        res.json(safeSettings);
+  init: function(_runtime) {
+    runtime = _runtime
+    settings = runtime.settings
+  },
+  settings: function(req,res) {
+    var safeSettings = {
+      httpNodeRoot: settings.httpNodeRoot,
+      version: settings.version,
+      user: req.user
     }
+
+    var themeSettings = theme.settings()
+    if (themeSettings) {
+      safeSettings.editorTheme = themeSettings
+    }
+
+    if (util.isArray(settings.paletteCategories)) {
+      safeSettings.paletteCategories = settings.paletteCategories
+    }
+
+    if (settings.flowFilePretty) {
+      safeSettings.flowFilePretty = settings.flowFilePretty
+    }
+    if (!runtime.nodes.paletteEditorEnabled()) {
+      safeSettings.editorTheme = safeSettings.editorTheme || {}
+      safeSettings.editorTheme.palette = safeSettings.editorTheme.palette || {}
+      safeSettings.editorTheme.palette.editable = false
+    }
+    res.json(safeSettings)
+  }
 }
