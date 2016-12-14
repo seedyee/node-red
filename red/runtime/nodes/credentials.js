@@ -85,7 +85,7 @@ var api = module.exports = {
               credentials = decryptCredentials(defaultKey,credentials)
             } catch(err) {
               credentials = {};
-              log.warn(log._("nodes.credentials.error",{message:err.toString()}))
+              log.warn(`nodes.credentials.error message: ${err.toString()}`)
             }
           }
           dirty = true;
@@ -249,7 +249,7 @@ var api = module.exports = {
       var dashedType = nodeType.replace(/\s+/g, '-');
       var definition = credentialsDef[dashedType];
       if (!definition) {
-        log.warn(log._("nodes.credentials.not-registered",{type:nodeType}));
+        log.warn(`nodes.credentials.not-registered type:${nodeType}`);
         return;
       }
 

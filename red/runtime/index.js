@@ -44,10 +44,10 @@ function start() {
              .then(function() { return storage.init(runtime)})
              .then(function() { return settings.load(storage)})
              .then(function() {
-               console.log(`\n\n${log._('runtime.welcome')}\n===================\n`)
                log.info(`Node-RED version v${settings.version}`)
                log.info(`Node.js version ${process.version}`)
                return redNodes.load().then(function() {
+                 console.log('\n\n==================== Welcome ^_^ ============================\n\n')
                  const nodeErrors = redNodes.getNodeList(function(n) { return n.err != null})
                  const nodeMissings = redNodes.getNodeList(n => n.module && n.enabled && !n.loaded && !n.err)
                  if (nodeErrors.length > 0) {
