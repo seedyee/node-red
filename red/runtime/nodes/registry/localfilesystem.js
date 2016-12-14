@@ -32,7 +32,7 @@ function init(runtime) {
 
 function getLocalFile(file) {
   try {
-    fs.statSync(file.replace(/\.js$/,'.html'))
+    fs.statSync(file.replace(/\.js$/, '.html'))
   } catch(err) {
     console.log(err)
     throw err
@@ -40,7 +40,7 @@ function getLocalFile(file) {
   return {
     file: file,
     module: 'node-red',
-    name: path.basename(file).replace(/^\d+-/,'').replace(/\.js$/,''),
+    name: path.basename(file).replace(/^\d+-/, '').replace(/\.js$/, ''),
     version: settings.version,
   }
 }
@@ -83,7 +83,7 @@ function getLocalNodeFiles(dir) {
 }
 
 /**
- * Scans the node_modules path for nodes
+ * Scans the specified paths for nodes
  * @param moduleName the name of the module to be found
  * @return a list of node modules: {dir,package}
  */

@@ -41,11 +41,7 @@ function init(_settings, _loader) {
 }
 
 function load() {
-  if (settings.available()) {
-    moduleConfigs = loadNodeConfigs()
-  } else {
-    moduleConfigs = {}
-  }
+  moduleConfigs = loadNodeConfigs()
 }
 
 function filterNodeInfo(n) {
