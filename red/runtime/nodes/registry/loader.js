@@ -33,13 +33,33 @@ function init(_runtime) {
 }
 
 function load(defaultNodesDir, disableNodePathScan) {
-  // To skip node scan, the following line will use the stored node list.
-  // We should expose that as an option at some point, although the
-  // performance gains are minimal.
-  //return loadNodeFiles(registry.getModuleList());
-  runtime.log.info(runtime.log._('server.loading'));
-  var nodeFiles = localfilesystem.getNodeFiles(defaultNodesDir, disableNodePathScan);
-  return loadNodeFiles(nodeFiles);
+  runtime.log.info(runtime.log._('server.loading'))
+  const nodeFiles = localfilesystem.getNodeFiles()
+  console.log(nodeFiles['node-red'].nodes.tail)
+  return loadNodeFiles(nodeFiles)
+}
+
+function loadNodeFiles(nodeFiles) {
+  const promises = []
+  forOwn(nodeFiles, module => {
+    const { nodes } = module
+    forOwn(nodes, nodeMeta => {
+      try {
+        promises.push(loadNodeConfig(nodeMeta))
+      } catch(err) {
+        console.log(err)
+        //
+      }
+    })
+  })
+
+  return when.all(promises).then(function(values) {
+    const nodes = values.map(function(value) {
+      registry.addNodeSet(value.id, value, value.version)
+      return value
+    })
+    return loadNodeSetList(nodes)
+  })
 }
 
 function createNodeApi(node) {
@@ -112,35 +132,12 @@ function createNodeApi(node) {
   return red
 }
 
-function loadNodeFiles(nodeFiles) {
-  const promises = []
-  forOwn(nodeFiles, (module, moduleKey) => {
-    if (moduleKey === 'node-red' || !registry.getModuleInfo(moduleKey)) {
-      const moduleNodes = module.nodes
-      forOwn(moduleNodes, (moduleNode) => {
-        try {
-          promises.push(loadNodeConfig(moduleNode))
-        } catch(err) {
-          console.log(err)
-          //
-        }
-      })
-    }
-  })
 
-  return when.all(promises).then(function(values) {
-    const nodes = values.map(function(value) {
-      registry.addNodeSet(value.id, value, value.version)
-      return value
-    })
-    return loadNodeSetList(nodes)
-  })
-}
-
-function loadNodeConfig(fileInfo) {
-  const { file, module, name, version } = fileInfo
+function loadNodeConfig(nodeMeta) {
+  const { file, module, name, version  } = nodeMeta
   const id = `${module}/${name}`
   const info = registry.getNodeInfo(id)
+  const template = file.replace(/\.js$/,'.html')
   let isEnabled = true
 
   return when.promise(function(resolve) {
@@ -150,97 +147,43 @@ function loadNodeConfig(fileInfo) {
     }
 
     const node = {
-      id: id,
-      module: module,
-      name: name,
-      file: file,
-      template: file.replace(/\.js$/,'.html'),
+      id,
+      module,
+      name,
+      file,
+      template,
+      types: [],
       enabled: isEnabled,
       loaded:false,
       version: version,
-      local: fileInfo.local,
+      local: nodeMeta.local,
     }
 
-    if (fileInfo.hasOwnProperty('types')) {
-      node.types = fileInfo.types
-    }
-
-    fs.readFile(node.template, 'utf8', function(err, content) {
+    fs.readFile(template, 'utf8', function(err, content) {
       if (err) {
-        node.types = [];
-        if (err.code === 'ENOENT') {
-          if (!node.types) {
-            node.types = [];
-          }
-          node.err = 'Error: '+node.template+' does not exist';
-        } else {
-          node.types = [];
-          node.err = err.toString();
-        }
-        resolve(node);
+        node.err = (err.code === 'ENOENT') ? `Error: ${templat} does not exist` : err.toString()
+        resolve(node)
       } else {
-        const types = [];
-
-        let regExp = /<script ([^>]*)data-template-name=['']([^'']*)['']/gi;
-        let match = null
-
+        let regExp = /(<script[^>]* data-help-name=[\s\S]*?<\/script>)/gi
+        match = null
+        let mainContent = ''
+        let helpContent = {}
+        let index = 0
+        const lang = runtime.i18n.defaultLang
         while ((match = regExp.exec(content)) !== null) {
-          types.push(match[2]);
+          mainContent += content.substring(index, regExp.lastIndex - match[1].length)
+          index = regExp.lastIndex
+          const help = content.substring(regExp.lastIndex - match[1].length, regExp.lastIndex)
+          helpContent[lang] += help
         }
-        node.types = types;
-
-        const langRegExp = /^<script[^>]* data-lang=[''](.+?)['']/i;
-        regExp = /(<script[^>]* data-help-name=[\s\S]*?<\/script>)/gi;
-        match = null;
-        var mainContent = '';
-        var helpContent = {};
-        var index = 0;
-        while ((match = regExp.exec(content)) !== null) {
-          mainContent += content.substring(index,regExp.lastIndex-match[1].length);
-          index = regExp.lastIndex;
-          var help = content.substring(regExp.lastIndex-match[1].length,regExp.lastIndex);
-
-          var lang = runtime.i18n.defaultLang;
-          if ((match = langRegExp.exec(help)) !== null) {
-            lang = match[1];
-          }
-          if (!helpContent.hasOwnProperty(lang)) {
-            helpContent[lang] = '';
-          }
-
-          helpContent[lang] += help;
-        }
-        mainContent += content.substring(index);
-
-        node.config = mainContent;
-        node.help = helpContent;
-        // TODO: parse out the javascript portion of the template
-        //node.script = '';
-        for (var i=0;i<node.types.length;i++) {
-          if (registry.getTypeId(node.types[i])) {
-            node.err = node.types[i]+' already registered';
-            break;
-          }
-        }
-        fs.stat(path.join(path.dirname(file),'locales'),function(err,stat) {
-          if (!err) {
-            node.namespace = node.id;
-            runtime.i18n
-                   .registerMessageCatalog(
-                     node.id, path.join(path.dirname(file),'locales'),
-                     path.basename(file,'.js')+'.json'
-                   )
-                   .then(function() {
-                     resolve(node);
-                   });
-          } else {
-            node.namespace = node.module;
-            resolve(node);
-          }
-        });
+        mainContent += content.substring(index)
+        node.config = mainContent
+        node.help = helpContent
+        node.namespace = node.module
+        resolve(node)
       }
-    });
-  });
+    })
+  })
 }
 
 /**
