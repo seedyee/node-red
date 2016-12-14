@@ -196,31 +196,16 @@ function createNodeApi(node) {
 function loadNodeSet(node) {
   const nodeDir = path.dirname(node.file)
   const nodeFn = path.basename(node.file)
-  if (!node.enabled) return when.resolve(node)
   try {
-    var loadPromise = null
-    var r = require(node.file)
-    if (typeof r === 'function') {
-      var red = createNodeApi(node)
-      var promise = r(red)
-      if (promise != null && typeof promise.then === 'function') {
-        loadPromise = promise.then(function() {
-          node.enabled = true
-          node.loaded = true
-          return node
-        }).otherwise(function(err) {
-          node.err = err
-          return node
-        })
-      }
-    }
-    if (loadPromise == null) {
-      node.enabled = true
-      node.loaded = true
-      loadPromise = when.resolve(node)
-    }
-    return loadPromise
+    const nodeFn = require(node.file)
+    if (typeof nodeFn !== 'function') throw new Error(`Not function is exported in: ${node.file}`)
+    const red = createNodeApi(node)
+    nodeFn(red)
+    node.enabled = true
+    node.loaded = true
+    return when.resolve(node)
   } catch(err) {
+    console.log(err)
     node.err = err
     return when.resolve(node)
   }
