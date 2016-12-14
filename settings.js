@@ -20,7 +20,7 @@
 const path = require('path')
 
 process.title = 'node-red'
-process.env.NODE_RED_HOME = path.resolve(process.env.NODE_RED_HOME || __dirname)
+process.env.NODE_RED_HOME = __dirname
 const uiPort = process.env.UI_PORT || 1880
 const uiHost = process.env.UI_HOST || '127.0.0.1'
 const userDir = path.resolve(process.env.USER_DIR || path.join(process.env.HOME, './.node-red'))
@@ -99,7 +99,7 @@ module.exports = {
 
   // The maximum size of HTTP request that will be accepted by the runtime api.
   // Default: 5mb
-  //apiMaxLength: '5mb',
+  apiMaxLength: '5mb',
 
   // If you installed the optional node-red-dashboard you can set it's path
   // relative to httpEditorRoot
