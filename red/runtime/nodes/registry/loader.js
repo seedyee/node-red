@@ -53,12 +53,64 @@ function loadNodeFiles(nodeFiles) {
     })
   })
 
-  return when.all(promises).then(function(values) {
-    const nodes = values.map(function(value) {
-      registry.addNodeSet(value.id, value, value.version)
-      return value
+  return when.all(promises).then(nodes => {
+    nodes.forEach(node => {
+      registry.addNodeSet(node)
     })
     return loadNodeSetList(nodes)
+  })
+}
+
+function loadNodeConfig(nodeMeta) {
+  const { file, module, name, version  } = nodeMeta
+  const id = `${module}/${name}`
+  const info = registry.getNodeInfo(id)
+  const template = file.replace(/\.js$/,'.html')
+  let isEnabled = true
+
+  return when.promise(function(resolve) {
+    if (info) {
+      if (info.hasOwnProperty('loaded')) throw new Error(`${file} already loaded`)
+      isEnabled = info.enabled
+    }
+
+    const node = {
+      id,
+      module,
+      name,
+      file,
+      template,
+      types: [],
+      enabled: isEnabled,
+      loaded:false,
+      version: version,
+      local: nodeMeta.local,
+    }
+
+    fs.readFile(template, 'utf8', function(err, content) {
+      if (err) {
+        node.err = (err.code === 'ENOENT') ? `Error: ${templat} does not exist` : err.toString()
+        resolve(node)
+      } else {
+        let regExp = /(<script[^>]* data-help-name=[\s\S]*?<\/script>)/gi
+        match = null
+        let mainContent = ''
+        let helpContent = {}
+        let index = 0
+        const lang = runtime.i18n.defaultLang
+        while ((match = regExp.exec(content)) !== null) {
+          mainContent += content.substring(index, regExp.lastIndex - match[1].length)
+          index = regExp.lastIndex
+          const help = content.substring(regExp.lastIndex - match[1].length, regExp.lastIndex)
+          helpContent[lang] += help
+        }
+        mainContent += content.substring(index)
+        node.config = mainContent
+        node.help = helpContent
+        node.namespace = node.module
+        resolve(node)
+      }
+    })
   })
 }
 
@@ -132,60 +184,6 @@ function createNodeApi(node) {
   return red
 }
 
-
-function loadNodeConfig(nodeMeta) {
-  const { file, module, name, version  } = nodeMeta
-  const id = `${module}/${name}`
-  const info = registry.getNodeInfo(id)
-  const template = file.replace(/\.js$/,'.html')
-  let isEnabled = true
-
-  return when.promise(function(resolve) {
-    if (info) {
-      if (info.hasOwnProperty('loaded')) throw new Error(`${file} already loaded`)
-      isEnabled = info.enabled
-    }
-
-    const node = {
-      id,
-      module,
-      name,
-      file,
-      template,
-      types: [],
-      enabled: isEnabled,
-      loaded:false,
-      version: version,
-      local: nodeMeta.local,
-    }
-
-    fs.readFile(template, 'utf8', function(err, content) {
-      if (err) {
-        node.err = (err.code === 'ENOENT') ? `Error: ${templat} does not exist` : err.toString()
-        resolve(node)
-      } else {
-        let regExp = /(<script[^>]* data-help-name=[\s\S]*?<\/script>)/gi
-        match = null
-        let mainContent = ''
-        let helpContent = {}
-        let index = 0
-        const lang = runtime.i18n.defaultLang
-        while ((match = regExp.exec(content)) !== null) {
-          mainContent += content.substring(index, regExp.lastIndex - match[1].length)
-          index = regExp.lastIndex
-          const help = content.substring(regExp.lastIndex - match[1].length, regExp.lastIndex)
-          helpContent[lang] += help
-        }
-        mainContent += content.substring(index)
-        node.config = mainContent
-        node.help = helpContent
-        node.namespace = node.module
-        resolve(node)
-      }
-    })
-  })
-}
-
 /**
  * Loads the specified node into the runtime
  * @param node a node info object - see loadNodeConfig
@@ -194,100 +192,93 @@ function loadNodeConfig(nodeMeta) {
  *            err: any error encountered whilst loading the node
  *
  */
+
 function loadNodeSet(node) {
   const nodeDir = path.dirname(node.file)
   const nodeFn = path.basename(node.file)
   if (!node.enabled) return when.resolve(node)
   try {
-    var loadPromise = null;
-    var r = require(node.file);
+    var loadPromise = null
+    var r = require(node.file)
     if (typeof r === 'function') {
-      var red = createNodeApi(node);
-      var promise = r(red);
+      var red = createNodeApi(node)
+      var promise = r(red)
       if (promise != null && typeof promise.then === 'function') {
         loadPromise = promise.then(function() {
-          node.enabled = true;
-          node.loaded = true;
-          return node;
+          node.enabled = true
+          node.loaded = true
+          return node
         }).otherwise(function(err) {
-          node.err = err;
-          return node;
-        });
+          node.err = err
+          return node
+        })
       }
     }
     if (loadPromise == null) {
-      node.enabled = true;
-      node.loaded = true;
-      loadPromise = when.resolve(node);
+      node.enabled = true
+      node.loaded = true
+      loadPromise = when.resolve(node)
     }
-    return loadPromise;
+    return loadPromise
   } catch(err) {
-    node.err = err;
-    return when.resolve(node);
+    node.err = err
+    return when.resolve(node)
   }
 }
 
 function loadNodeSetList(nodes) {
-  var promises = [];
-  nodes.forEach(function(node) {
-    if (!node.err) {
-      promises.push(loadNodeSet(node));
-    } else {
-      promises.push(node);
-    }
-  });
+  const promises = []
+  nodes.forEach(node => {
+    node.err ? promises.push(node) : promises.push(loadNodeSet(node))
+  })
 
-  return when.settle(promises).then(function() {
-    if (settings.available()) {
-      return registry.saveNodeList();
-    } else {
-      return;
-    }
-  });
+  return when.all(promises).then(() => {
+    if (settings.available) return registry.saveNodeList()
+  })
 }
 
 function addModule(module) {
   if (!settings.available()) {
-    throw new Error('Settings unavailable');
+    throw new Error('Settings unavailable')
   }
-  var nodes = [];
+  var nodes = []
   if (registry.getModuleInfo(module)) {
     // TODO: nls
-    var e = new Error('module_already_loaded');
-    e.code = 'module_already_loaded';
-    return when.reject(e);
+    var e = new Error('module_already_loaded')
+    e.code = 'module_already_loaded'
+    return when.reject(e)
   }
 }
 
 function loadNodeHelp(node,lang) {
-  var dir = path.dirname(node.template);
-  var base = path.basename(node.template);
-  var localePath = path.join(dir,'locales',lang,base);
+  var dir = path.dirname(node.template)
+  var base = path.basename(node.template)
+  var localePath = path.join(dir,'locales',lang,base)
   try {
     // TODO: make this async
     var content = fs.readFileSync(localePath, 'utf8')
-    return content;
+    return content
   } catch(err) {
-    return null;
+    return null
   }
 }
 
 function getNodeHelp(node,lang) {
   if (!node.help[lang]) {
-    var help = loadNodeHelp(node,lang);
+    var help = loadNodeHelp(node,lang)
     if (help == null) {
-      var langParts = lang.split('-');
+      var langParts = lang.split('-')
       if (langParts.length == 2) {
-        help = loadNodeHelp(node,langParts[0]);
+        help = loadNodeHelp(node,langParts[0])
       }
     }
     if (help) {
-      node.help[lang] = help;
+      node.help[lang] = help
     } else {
-      node.help[lang] = node.help[runtime.i18n.defaultLang];
+      node.help[lang] = node.help[runtime.i18n.defaultLang]
     }
   }
-  return node.help[lang];
+  return node.help[lang]
 }
 
 module.exports = {
