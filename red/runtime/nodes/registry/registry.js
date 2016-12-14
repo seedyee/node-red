@@ -68,13 +68,13 @@ function filterNodeInfo(n) {
 
 
 function getModule(id) {
-  var parts = id.split('/')
-  return parts.slice(0,parts.length-1).join('/')
+  const parts = id.split('/')
+  return parts.slice(0, parts.length-1).join('/')
 }
 
 function getNode(id) {
-  var parts = id.split('/')
-  return parts[parts.length-1]
+  const parts = id.split('/')
+  return parts[parts.length - 1]
 }
 
 function saveNodeList() {

@@ -193,25 +193,21 @@ function createNodeApi(node) {
  *
  */
 
-function loadNodeSet(node) {
-  const nodeDir = path.dirname(node.file)
-  const nodeFn = path.basename(node.file)
-  try {
-    const nodeFn = require(node.file)
-    if (typeof nodeFn !== 'function') throw new Error(`Not function is exported in: ${node.file}`)
-    const red = createNodeApi(node)
-    nodeFn(red)
-    node.enabled = true
-    node.loaded = true
-  } catch(err) {
-    console.log(err)
-    node.err = err
-  }
-}
-
 function loadNodeSetList(nodes) {
   nodes.forEach(node => {
-    loadNodeSet(node)
+    const nodeDir = path.dirname(node.file)
+    const nodeFn = path.basename(node.file)
+    try {
+      const nodeFn = require(node.file)
+      if (typeof nodeFn !== 'function') throw new Error(`Not function is exported in: ${node.file}`)
+      const red = createNodeApi(node)
+      nodeFn(red)
+      node.enabled = true
+      node.loaded = true
+    } catch(err) {
+      console.log(err)
+      node.err = err
+    }
   })
   return registry.saveNodeList()
 }
@@ -220,10 +216,10 @@ function addModule(module) {
   if (!settings.available()) {
     throw new Error('Settings unavailable')
   }
-  var nodes = []
+  const nodes = []
   if (registry.getModuleInfo(module)) {
     // TODO: nls
-    var e = new Error('module_already_loaded')
+    const e = new Error('module_already_loaded')
     e.code = 'module_already_loaded'
     return when.reject(e)
   }
@@ -242,9 +238,9 @@ function loadNodeHelp(node,lang) {
   }
 }
 
-function getNodeHelp(node,lang) {
+function getNodeHelp(node, lang) {
   if (!node.help[lang]) {
-    var help = loadNodeHelp(node,lang)
+    var help = loadNodeHelp(node, lang)
     if (help == null) {
       var langParts = lang.split('-')
       if (langParts.length == 2) {
@@ -264,6 +260,5 @@ module.exports = {
   init: init,
   load: load,
   addModule: addModule,
-  loadNodeSet: loadNodeSet,
-  getNodeHelp: getNodeHelp
+  getNodeHelp: getNodeHelp,
 }
