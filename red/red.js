@@ -20,9 +20,6 @@ const path = require('path')
 const runtime = require('./runtime')
 const api = require('./api')
 
-process.title = 'node-red'
-process.env.NODE_RED_HOME = process.env.NODE_RED_HOME || path.join(__dirname, '..')
-
 let nodeApp = null
 let adminApp = null
 let server = null

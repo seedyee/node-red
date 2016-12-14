@@ -79,8 +79,8 @@ function createNodeApi(node) {
     util: runtime.util,
     version: runtime.version,
   }
-  red.nodes.registerType = function(type,constructor,opts) {
-    runtime.nodes.registerType(node.id,type,constructor,opts);
+  red.nodes.registerType = function(type, constructor, opts) {
+    runtime.nodes.registerType(node.id, type, constructor, opts)
   }
   const adminApi = runtime.adminApi
   if (adminApi) {
@@ -313,12 +313,6 @@ function addModule(module) {
     var e = new Error('module_already_loaded');
     e.code = 'module_already_loaded';
     return when.reject(e);
-  }
-  try {
-    var moduleFiles = localfilesystem.getModuleFiles(module);
-    return loadNodeFiles(moduleFiles);
-  } catch(err) {
-    return when.reject(err);
   }
 }
 
