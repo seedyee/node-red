@@ -1,50 +1,49 @@
 /**
  * Copyright 2015 IBM Corp.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
 
-var when = require("when");
-var fs = require("fs");
-var path = require("path");
-var events;
-var log;
-var i18n;
+const when = require('when')
+const fs = require('fs')
+const path = require('path')
 
-var settings;
-var disableNodePathScan = false;
+let events
+let log
+let i18n
+let settings
 
 function init(runtime) {
-  settings = runtime.settings;
-  events = runtime.events;
-  log = runtime.log;
-  i18n = runtime.i18n;
+  settings = runtime.settings
+  events = runtime.events
+  log = runtime.log
+  i18n = runtime.i18n
 }
 
 function getLocalFile(file) {
   try {
-    fs.statSync(file.replace(/\.js$/,".html"));
-    return {
-      file:    file,
-      module:  "node-red",
-      name:    path.basename(file).replace(/^\d+-/,"").replace(/\.js$/,""),
-      version: settings.version
-    };
+    fs.statSync(file.replace(/\.js$/,'.html'))
   } catch(err) {
-    return null;
+    console.log(err)
+    throw err
+  }
+  return {
+    file: file,
+    module: 'node-red',
+    name: path.basename(file).replace(/^\d+-/,'').replace(/\.js$/,''),
+    version: settings.version,
   }
 }
-
 
 /**
  * Synchronously walks the directory looking for node files.
@@ -52,67 +51,35 @@ function getLocalFile(file) {
  * @param dir the directory to search
  * @return an array of fully-qualified paths to .js files
  */
+
 function getLocalNodeFiles(dir) {
-  var result = [];
-  var files = [];
+  let result = []
+  let files = []
   try {
-    files = fs.readdirSync(dir);
+    files = fs.readdirSync(dir).sort()
   } catch(err) {
-    return result;
+    console.log(err)
+    throw err
   }
-  files.sort();
+
   files.forEach(function(fn) {
-    var stats = fs.statSync(path.join(dir,fn));
+    const stats = fs.statSync(path.join(dir,fn))
     if (stats.isFile()) {
       if (/\.js$/.test(fn)) {
-        var info = getLocalFile(path.join(dir,fn));
-        if (info) {
-          result.push(info);
-        }
+        const info = getLocalFile(path.join(dir, fn))
+        result.push(info)
       }
     } else if (stats.isDirectory()) {
       // Ignore /.dirs/, /lib/ /node_modules/
       if (!/^(\..*|lib|icons|node_modules|test|locales)$/.test(fn)) {
-        result = result.concat(getLocalNodeFiles(path.join(dir,fn)));
-      } else if (fn === "icons") {
-        events.emit("node-icon-dir",path.join(dir,fn));
+        result = result.concat(getLocalNodeFiles(path.join(dir,fn)))
+      } else if (fn === 'icons') {
+        // todo remove the following stupid line and it's deps
+        events.emit('node-icon-dir', path.join(dir,fn))
       }
     }
-  });
-  return result;
-}
-
-function scanDirForNodesModules(dir,moduleName) {
-  var results = [];
-  try {
-    var files = fs.readdirSync(dir);
-    for (var i=0;i<files.length;i++) {
-      var fn = files[i];
-      if (/^@/.test(fn)) {
-        results = results.concat(scanDirForNodesModules(path.join(dir,fn),moduleName));
-      } else {
-        if (!moduleName || fn == moduleName) {
-          var pkgfn = path.join(dir,fn,"package.json");
-          try {
-            var pkg = require(pkgfn);
-            if (pkg['node-red']) {
-              var moduleDir = path.join(dir,fn);
-              results.push({dir:moduleDir,package:pkg});
-            }
-          } catch(err) {
-            if (err.code != "MODULE_NOT_FOUND") {
-              // TODO: handle unexpected error
-            }
-          }
-          if (fn == moduleName) {
-            break;
-          }
-        }
-      }
-    }
-  } catch(err) {
-  }
-  return results;
+  })
+  return result
 }
 
 /**
@@ -120,69 +87,29 @@ function scanDirForNodesModules(dir,moduleName) {
  * @param moduleName the name of the module to be found
  * @return a list of node modules: {dir,package}
  */
-function getModuleNodeFiles(module) {
-
-  var moduleDir = module.dir;
-  var pkg = module.package;
-
-  var nodes = pkg['node-red'].nodes||{};
-  var results = [];
-  var iconDirs = [];
-
-  for (var n in nodes) {
-    /* istanbul ignore else */
-    if (nodes.hasOwnProperty(n)) {
-      var file = path.join(moduleDir,nodes[n]);
-      results.push({
-        file:    file,
-        module:  pkg.name,
-        name:    n,
-        version: pkg.version
-      });
-      var iconDir = path.join(moduleDir,path.dirname(nodes[n]),"icons");
-      if (iconDirs.indexOf(iconDir) == -1) {
-        try {
-          fs.statSync(iconDir);
-          events.emit("node-icon-dir",iconDir);
-          iconDirs.push(iconDir);
-        } catch(err) {
-        }
-      }
-    }
-  }
-  var examplesDir = path.join(moduleDir,"examples");
-  try {
-    fs.statSync(examplesDir)
-    events.emit("node-examples-dir",{name:pkg.name,path:examplesDir});
-  } catch(err) {
-  }
-  return results;
-}
 
 function getNodeFiles() {
   // Find all of the nodes to load
   const { coreNodesDir, nodesDirList, userDir } = settings
+  const defaultLocalesPath = path.join(coreNodesDir, 'core', 'locales')
+  i18n.registerMessageCatalog('node-red', defaultLocalesPath, 'messages.json')
 
-  const defaultLocalesPath = path.join(coreNodesDir, "core", "locales")
-  i18n.registerMessageCatalog("node-red", defaultLocalesPath, "messages.json")
-  console.log(settings.nodesDirList)
-
+  // map and then flatten
   const nodeFiles = nodesDirList.map(getLocalNodeFiles).reduce((a, b) => a.concat(b), [])
   const nodeList = {
-    "node-red": {
-      name: "node-red",
+    'node-red': {
+      name: 'node-red',
       version: settings.version,
       nodes: {},
     }
   }
   nodeFiles.forEach(function(node) {
-    nodeList["node-red"].nodes[node.name] = node
+    nodeList['node-red'].nodes[node.name] = node
   })
-  return nodeList;
+  return nodeList
 }
 
 module.exports = {
-  init: init,
-  getNodeFiles: getNodeFiles,
-  getLocalFile: getLocalFile,
+  init,
+  getNodeFiles,
 }
