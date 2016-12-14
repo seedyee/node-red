@@ -1,13 +1,13 @@
 const path = require('path')
-
-module.exports.getVersion = function() {
-  let version = require(path.join(__dirname, '../../package.json')).version
-  /* istanbul ignore else */
+module.exports.getVersion = () => {
+  let version
   try {
-    fs.statSync(path.join(__dirname, '../../.git'))
-    version += '-git'
+    version = require(path.join(__dirname, '../../package.json')).version
   } catch(err) {
-    // No git directory
+    console.log(err)
   }
-    return version
+  if (!version) {
+    console.log('[warn]: Can\'t find version field in package.json')
+  }
+  return version
 }

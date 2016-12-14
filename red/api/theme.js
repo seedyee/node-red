@@ -59,9 +59,7 @@ module.exports = {
     init: function(runtime) {
         var settings = runtime.settings;
         themeContext = clone(defaultContext);
-        if (runtime.version) {
-            themeContext.version = runtime.version();
-        }
+        themeContext.version = runtime.version
         themeSettings = null;
         theme = settings.editorTheme;
     },

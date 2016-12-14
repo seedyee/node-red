@@ -26,6 +26,7 @@ const path = require('path')
 const fs = require('fs')
 
 const { getVersion } = require('../utils')
+const version = getVersion()
 let started = false
 let adminApi
 
@@ -45,11 +46,10 @@ function start() {
              .then(function() { return settings.load(storage)})
              .then(function() {
                console.log('\n\n==================== Welcome ============================\n\n')
-               log.info(`Node-RED version v${settings.version}`)
+               log.info(`Node-RED version v${version}`)
                log.info(`Node.js version ${process.version}`)
                return redNodes.load().then(function() {
                  const nodeErrors = redNodes.getNodeList(function(n) { return n.err != null})
-                 const nodeMissings = redNodes.getNodeList(n => n.module && n.enabled && !n.loaded && !n.err)
                  if (nodeErrors.length > 0) {
                    log.warn('------------------------------------------------------')
                    nodeErrors.forEach(err => {
@@ -75,9 +75,7 @@ var runtime = module.exports = {
   init: init,
   start: start,
   stop: stop,
-
-  version: getVersion,
-
+  version: getVersion(),
   log: log,
   i18n: i18n,
   settings: settings,
