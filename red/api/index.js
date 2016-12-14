@@ -41,7 +41,7 @@ let nodeApp
 let server
 let runtime
 
-var errorHandler = function(err, req, res, next) {
+const errorHandler = function(err, req, res, next) {
   if (err.message === 'request entity too large') {
     log.error(err)
   } else {
@@ -51,7 +51,7 @@ var errorHandler = function(err, req, res, next) {
   res.status(400).json({error:'unexpected_error', message:err.toString()})
 }
 
-var ensureRuntimeStarted = function(req, res, next) {
+const ensureRuntimeStarted = function(req, res, next) {
   if (!runtime.isStarted()) {
     log.error('Node-RED runtime not started')
     res.status(503).send('Not started')
@@ -60,10 +60,10 @@ var ensureRuntimeStarted = function(req, res, next) {
   }
 }
 
-function init(_server,_runtime) {
+function init(_server, _runtime) {
   server = _server
   runtime = _runtime
-  var settings = runtime.settings
+  const settings = runtime.settings
   i18n = runtime.i18n
   log = runtime.log
   nodeApp = express()
@@ -124,35 +124,35 @@ function init(_server,_runtime) {
 
   // Flows
   adminApp.get('/flows', needsPermission('flows.read'), flows.get, errorHandler)
-  adminApp.post('/flows',needsPermission('flows.write'),flows.post,errorHandler)
+  adminApp.post('/flows', needsPermission('flows.write'),flows.post,errorHandler)
 
-  adminApp.get('/flow/:id',needsPermission('flows.read'),flow.get,errorHandler)
-  adminApp.post('/flow',needsPermission('flows.write'),flow.post,errorHandler)
-  adminApp.delete('/flow/:id',needsPermission('flows.write'),flow.delete,errorHandler)
-  adminApp.put('/flow/:id',needsPermission('flows.write'),flow.put,errorHandler)
+  adminApp.get('/flow/:id', needsPermission('flows.read'), flow.get,errorHandler)
+  adminApp.post('/flow', needsPermission('flows.write'), flow.post,errorHandler)
+  adminApp.delete('/flow/:id', needsPermission('flows.write'), flow.delete,errorHandler)
+  adminApp.put('/flow/:id', needsPermission('flows.write'), flow.put,errorHandler)
 
   // Nodes
-  adminApp.get('/nodes',needsPermission('nodes.read'),nodes.getAll,errorHandler)
-  adminApp.post('/nodes',needsPermission('nodes.write'),nodes.post,errorHandler)
+  adminApp.get('/nodes', needsPermission('nodes.read'),nodes.getAll,errorHandler)
+  adminApp.post('/nodes', needsPermission('nodes.write'),nodes.post,errorHandler)
 
-  adminApp.get(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/,needsPermission('nodes.read'),nodes.getModule,errorHandler)
-  adminApp.put(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/,needsPermission('nodes.write'),nodes.putModule,errorHandler)
-  adminApp.delete(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/,needsPermission('nodes.write'),nodes.delete,errorHandler)
+  adminApp.get(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/, needsPermission('nodes.read'),nodes.getModule,errorHandler)
+  adminApp.put(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/, needsPermission('nodes.write'),nodes.putModule,errorHandler)
+  adminApp.delete(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/, needsPermission('nodes.write'),nodes.delete,errorHandler)
 
-  adminApp.get(/\/nodes\/((@[^\/]+\/)?[^\/]+)\/([^\/]+)$/,needsPermission('nodes.read'),nodes.getSet,errorHandler)
-  adminApp.put(/\/nodes\/((@[^\/]+\/)?[^\/]+)\/([^\/]+)$/,needsPermission('nodes.write'),nodes.putSet,errorHandler)
+  adminApp.get(/\/nodes\/((@[^\/]+\/)?[^\/]+)\/([^\/]+)$/, needsPermission('nodes.read'),nodes.getSet,errorHandler)
+  adminApp.put(/\/nodes\/((@[^\/]+\/)?[^\/]+)\/([^\/]+)$/, needsPermission('nodes.write'),nodes.putSet,errorHandler)
 
   adminApp.get('/credentials/:type/:id', needsPermission('credentials.read'),credentials.get,errorHandler)
 
   adminApp.get(/locales\/(.+)\/?$/,locales.get,errorHandler)
 
   // Library
-  adminApp.post(new RegExp('/library/flows\/(.*)'),needsPermission('library.write'),library.post,errorHandler)
-  adminApp.get('/library/flows',needsPermission('library.read'),library.getAll,errorHandler)
-  adminApp.get(new RegExp('/library/flows\/(.*)'),needsPermission('library.read'),library.get,errorHandler)
+  adminApp.post(new RegExp('/library/flows\/(.*)'), needsPermission('library.write'),library.post,errorHandler)
+  adminApp.get('/library/flows', needsPermission('library.read'),library.getAll,errorHandler)
+  adminApp.get(new RegExp('/library/flows\/(.*)'), needsPermission('library.read'),library.get,errorHandler)
 
   // Settings
-  adminApp.get('/settings',needsPermission('settings.read'),info.settings,errorHandler)
+  adminApp.get('/settings', needsPermission('settings.read'),info.settings,errorHandler)
   // Error Handler
   //adminApp.use(errorHandler)
 }
@@ -167,6 +167,7 @@ function stop() {
   comms.stop()
   return when.resolve()
 }
+
 module.exports = {
   init: init,
   start: start,
