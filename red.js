@@ -127,18 +127,18 @@ if (settings.httpStatic) {
 RED.start().then(function() {
   server.on('error', function(err) {
     if (err.errno === 'EADDRINUSE') {
-      RED.log.error(RED.log._('server.unable-to-listen', { listenpath }))
+      RED.log.error(`server.unable-to-listen ${listenpath}`)
     } else {
-      RED.log.error(RED.log._('server.uncaught-exception'))
+      RED.log.error('server.uncaught-exception')
       RED.log.error(err.stack || err)
     }
     process.exit(1)
   })
   server.listen(settings.uiPort, settings.uiHost, function() {
-    RED.log.info(RED.log._('server.now-running', { listenpath }))
+    RED.log.info(`server.now-running ${listenpath}`)
   })
 }).otherwise(function(err) {
-  RED.log.error(RED.log._('server.failed-to-start'))
+  RED.log.error('server.failed-to-start')
   RED.log.error(err.stack || err)
 })
 

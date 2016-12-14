@@ -169,6 +169,7 @@ function start() {
         comms.start();
     });
 }
+
 function stop() {
     comms.stop();
     return when.resolve();

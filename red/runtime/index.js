@@ -62,14 +62,14 @@ function init(userSettings, _adminApi) {
 function start() {
   return i18n.init()
              .then(function() {
-               return i18n.registerMessageCatalog('runtime', path.join(__dirname, 'locales'), 'runtime.json')
+               /* return i18n.registerMessageCatalog('runtime', path.join(__dirname, 'locales'), 'runtime.json')*/
              })
              .then(function() { return storage.init(runtime)})
              .then(function() { return settings.load(storage)})
              .then(function() {
                console.log(`\n\n${log._('runtime.welcome')}\n===================\n`)
-               log.info(log._('runtime.version', {component:'Node-RED', version:' v' + settings.version }))
-               log.info(log._('runtime.version', {component:'Node.js ', version: process.version }))
+               log.info(`Node-RED version v${settings.version}`)
+               log.info(`Node.js version ${process.version}`)
                return redNodes.load().then(function() {
                  const nodeErrors = redNodes.getNodeList(function(n) { return n.err != null})
                  const nodeMissings = redNodes.getNodeList(n => n.module && n.enabled && !n.loaded && !n.err)
@@ -81,7 +81,7 @@ function start() {
                    log.warn('------------------------------------------------------')
                  }
                  if (nodeMissings.length > 0) {
-                   log.warn(log._('server.missing-modules'))
+                   log.warn('server.missing-modules')
                    const missingModules = {}
                    nodeMissings.forEach(missing => {
                      missingModules[missing.module] = (missingModules[missing.module] || []).concat(missing.types)
