@@ -46,11 +46,11 @@ function addModule(module) {
 function enableNodeSet(typeOrId) {
   return registry.enableNodeSet(typeOrId).then(function() {
     var nodeSet = registry.getNodeInfo(typeOrId)
-    if (!nodeSet.loaded) {
-      return loader.loadNodeSet(registry.getFullNodeInfo(typeOrId)).then(function() {
-        return registry.getNodeInfo(typeOrId)
-      })
-    }
+    /* if (!nodeSet.loaded) {
+     *   return loader.loadNodeSet(registry.getFullNodeInfo(typeOrId)).then(function() {
+     *     return registry.getNodeInfo(typeOrId)
+     *   })
+     * }*/
     return when.resolve(nodeSet)
   })
 }

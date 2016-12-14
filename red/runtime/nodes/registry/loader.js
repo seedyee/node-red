@@ -203,23 +203,17 @@ function loadNodeSet(node) {
     nodeFn(red)
     node.enabled = true
     node.loaded = true
-    return when.resolve(node)
   } catch(err) {
     console.log(err)
     node.err = err
-    return when.resolve(node)
   }
 }
 
 function loadNodeSetList(nodes) {
-  const promises = []
   nodes.forEach(node => {
-    node.err ? promises.push(node) : promises.push(loadNodeSet(node))
+    loadNodeSet(node)
   })
-
-  return when.all(promises).then(() => {
-    if (settings.available) return registry.saveNodeList()
-  })
+  return registry.saveNodeList()
 }
 
 function addModule(module) {
