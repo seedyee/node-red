@@ -26,37 +26,14 @@ const path = require('path')
 const fs = require('fs')
 
 const { getVersion } = require('../utils')
-
 let started = false
-const stubbedExpressApp = {
-  get: function() {},
-  post: function() {},
-  put: function() {},
-  delete: function() {},
-}
-let adminApi = {
-  library: {
-    register: function() {}
-  },
-  auth: {
-    needsPermission: function() {}
-  },
-  comms: {
-    publish: function() {}
-  },
-  adminApp: stubbedExpressApp,
-  nodeApp: stubbedExpressApp,
-  server: {},
-}
+let adminApi
 
 function init(userSettings, _adminApi) {
   log.init(userSettings)
   settings.init(userSettings)
-  if (_adminApi) {
-    adminApi = _adminApi
-  }
+  adminApi = _adminApi
   redNodes.init(runtime)
-
 }
 
 function start() {
@@ -80,34 +57,11 @@ function start() {
                    })
                    log.warn('------------------------------------------------------')
                  }
-                 if (nodeMissings.length > 0) {
-                   log.warn('server.missing-modules')
-                   const missingModules = {}
-                   nodeMissings.forEach(missing => {
-                     missingModules[missing.module] = (missingModules[missing.module] || []).concat(missing.types)
-                   })
-                   const promises = []
-                   for (let i in missingModules) {
-                     if (missingModules.hasOwnProperty(i)) {
-                       log.warn(' - '+i+': '+missingModules[i].join(', '))
-                       if (settings.autoInstallModules && i != 'node-red') {
-                         redNodes.installModule(i).otherwise(function(err) {
-                           // Error already reported. Need the otherwise handler
-                           // to stop the error propagating any further
-                         })
-                       }
-                     }
-                   }
-                   if (!settings.autoInstallModules) {
-                     log.info(log._('server.removing-modules'))
-                     redNodes.cleanModuleList()
-                   }
-                 }
-                 log.info(log._('runtime.paths.settings', { path:settings.settingsFile }))
+                 log.info(`runtime.paths.settings ${settings.settingsFile}`)
                  redNodes.loadFlows().then(redNodes.startFlows)
                  started = true
-               }).otherwise(function(err) {
-                 console.log(err)
+               }).catch((err) => {
+                 log.error(err)
                })
              })
 }
