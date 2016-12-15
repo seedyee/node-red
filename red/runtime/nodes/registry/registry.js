@@ -158,18 +158,6 @@ function getModuleInfo(module) {
   }
 }
 
-function getCaller(){
-  var orig = Error.prepareStackTrace
-  Error.prepareStackTrace = function(_, stack){ return stack }
-  var err = new Error()
-  Error.captureStackTrace(err, arguments.callee)
-  var stack = err.stack
-  Error.prepareStackTrace = orig
-  stack.shift()
-  stack.shift()
-  return stack[0].getFileName()
-}
-
 function inheritNode(constructor) {
   if(Object.getPrototypeOf(constructor.prototype) === Object.prototype) {
     util.inherits(constructor,Node)
