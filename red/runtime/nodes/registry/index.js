@@ -40,7 +40,6 @@ module.exports = {
   getNodeList: registry.getNodeList,
 
   getModuleInfo: registry.getModuleInfo,
-  getModuleList: registry.getModuleList,
 
   getNodeConfigs: registry.getAllNodeConfigs,
   getNodeConfig: registry.getNodeConfig,

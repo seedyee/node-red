@@ -134,10 +134,6 @@ function getNodeList(filter) {
   return list
 }
 
-function getModuleList() {
-  return moduleConfigs
-}
-
 function getModuleInfo(module) {
   if (moduleNodes[module]) {
     var nodes = moduleNodes[module]
@@ -262,7 +258,6 @@ var registry = module.exports = {
   addNodeSet: addNodeSet,
   getFullNodeInfo: getFullNodeInfo,
   getNodeList: getNodeList,
-  getModuleList: getModuleList,
   getModuleInfo: getModuleInfo,
 
   /**
