@@ -124,26 +124,6 @@ function getNodeList(filter) {
   return list
 }
 
-function getModuleInfo(module) {
-  if (moduleNodes[module]) {
-    var nodes = moduleNodes[module]
-    var m = {
-      name: module,
-      version: moduleConfigs[module].version,
-      local: moduleConfigs[module].local,
-      nodes: [],
-    }
-    nodes.forEach(node => {
-      const nodeInfo = filterNodeInfo(moduleConfigs[module].nodes[node])
-      nodeInfo.version = m.version
-      m.nodes.push(nodeInfo)
-    })
-    return m
-  } else {
-    return null
-  }
-}
-
 function inheritNode(constructor) {
   if(Object.getPrototypeOf(constructor.prototype) === Object.prototype) {
     util.inherits(constructor,Node)
@@ -234,7 +214,6 @@ const registry = module.exports = {
   addNodeSet: addNodeSet,
   getFullNodeInfo: getFullNodeInfo,
   getNodeList: getNodeList,
-  getModuleInfo: getModuleInfo,
 
   /**
    * Gets all of the node template configs
