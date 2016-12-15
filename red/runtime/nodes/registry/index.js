@@ -15,44 +15,23 @@
  **/
 
 const when = require('when')
-const fs = require('fs')
 const path = require('path')
 
-const events = require('../../events')
 const registry = require('./registry')
 const loader = require('./loader')
-const installer = require('./installer')
-
-var settings
 
 function init(runtime) {
-  settings = runtime.settings
-  installer.init(runtime.settings)
   loader.init(runtime)
-  registry.init(settings, loader)
+  registry.init(runtime.settings, loader)
 }
 
 function load() {
   registry.load()
-  return installer.checkPrereq().then(loader.load)
+  return loader.load()
 }
 
-function addModule(module) {
-  return loader.addModule(module).then(function() {
-    return registry.getModuleInfo(module)
-  })
-}
-
-function enableNodeSet(typeOrId) {
-  return registry.enableNodeSet(typeOrId).then(function() {
-    var nodeSet = registry.getNodeInfo(typeOrId)
-    /* if (!nodeSet.loaded) {
-     *   return loader.loadNodeSet(registry.getFullNodeInfo(typeOrId)).then(function() {
-     *     return registry.getNodeInfo(typeOrId)
-     *   })
-     * }*/
-    return when.resolve(nodeSet)
-  })
+function paletteEditorEnabled() {
+  return true
 }
 
 module.exports = {
@@ -71,16 +50,5 @@ module.exports = {
   getNodeConfigs: registry.getAllNodeConfigs,
   getNodeConfig: registry.getNodeConfig,
 
-  enableNode: enableNodeSet,
-  disableNode: registry.disableNodeSet,
-
-  addModule: addModule,
-  removeModule: registry.removeModule,
-
-  installModule: installer.installModule,
-  uninstallModule: installer.uninstallModule,
-
-  cleanModuleList: registry.cleanModuleList,
-
-  paletteEditorEnabled: installer.paletteEditorEnabled,
+  paletteEditorEnabled,
 }

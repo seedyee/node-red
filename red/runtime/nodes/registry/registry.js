@@ -182,46 +182,6 @@ function addNodeSet(set) {
   nodeConfigCache = null
 }
 
-function removeNode(id) {
-  var config = moduleConfigs[getModule(id)].nodes[getNode(id)]
-  if (!config) {
-    throw new Error('Unrecognised id: '+id)
-  }
-  delete moduleConfigs[getModule(id)].nodes[getNode(id)]
-  var i = nodeList.indexOf(id)
-  if (i > -1) {
-    nodeList.splice(i,1)
-  }
-  config.types.forEach(function(t) {
-    var typeId = nodeTypeToId[t]
-    if (typeId === id) {
-      delete nodeConstructors[t]
-      delete nodeTypeToId[t]
-    }
-  })
-  config.enabled = false
-  config.loaded = false
-  nodeConfigCache = null
-  return filterNodeInfo(config)
-}
-
-function removeModule(module) {
-  if (!settings.available()) {
-    throw new Error('Settings unavailable')
-  }
-  var nodes = moduleNodes[module]
-  if (!nodes) {
-    throw new Error('Unrecognised module: '+module)
-  }
-  var infoList = []
-  nodes.forEach(node => {
-    infoList.push(removeNode(`${module}/${node}`))
-  })
-  delete moduleNodes[module]
-  delete moduleConfigs[module]
-  saveNodeList()
-  return infoList
-}
 
 function getNodeInfo(typeOrId) {
   var id = typeOrId
@@ -431,89 +391,6 @@ function getTypeId(type) {
   }
 }
 
-function enableNodeSet(typeOrId) {
-  if (!settings.available()) {
-    throw new Error('Settings unavailable')
-  }
-
-  var id = typeOrId
-  if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId]
-  }
-  var config
-  try {
-    config = moduleConfigs[getModule(id)].nodes[getNode(id)]
-    delete config.err
-    config.enabled = true
-    nodeConfigCache = null
-    return saveNodeList().then(function() {
-      return filterNodeInfo(config)
-    })
-  } catch (err) {
-    throw new Error('Unrecognised id: '+typeOrId)
-  }
-}
-
-function disableNodeSet(typeOrId) {
-  if (!settings.available()) {
-    throw new Error('Settings unavailable')
-  }
-  var id = typeOrId
-  if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId]
-  }
-  var config
-  try {
-    config = moduleConfigs[getModule(id)].nodes[getNode(id)]
-    // TODO: persist setting
-    config.enabled = false
-    nodeConfigCache = null
-    return saveNodeList().then(function() {
-      return filterNodeInfo(config)
-    })
-  } catch (err) {
-    throw new Error('Unrecognised id: '+id)
-  }
-}
-
-function cleanModuleList() {
-  var removed = false
-  for (var mod in moduleConfigs) {
-    /* istanbul ignore else */
-    if (moduleConfigs.hasOwnProperty(mod)) {
-      var nodes = moduleConfigs[mod].nodes
-      var node
-      if (mod == 'node-red') {
-        // For core nodes, look for nodes that are enabled, !loaded and !errored
-        for (node in nodes) {
-          /* istanbul ignore else */
-          if (nodes.hasOwnProperty(node)) {
-            var n = nodes[node]
-            if (n.enabled && !n.err && !n.loaded) {
-              removeNode(mod+'/'+node)
-              removed = true
-            }
-          }
-        }
-      } else {
-        if (moduleConfigs[mod] && !moduleNodes[mod]) {
-          // For node modules, look for missing ones
-          for (node in nodes) {
-            /* istanbul ignore else */
-            if (nodes.hasOwnProperty(node)) {
-              removeNode(mod+'/'+node)
-              removed = true
-            }
-          }
-          delete moduleConfigs[mod]
-        }
-      }
-    }
-  }
-  if (removed) {
-    saveNodeList()
-  }
-}
 
 var registry = module.exports = {
   init: init,
@@ -524,11 +401,6 @@ var registry = module.exports = {
   getNodeConstructor: getNodeConstructor,
 
   addNodeSet: addNodeSet,
-  enableNodeSet: enableNodeSet,
-  disableNodeSet: disableNodeSet,
-
-  removeModule: removeModule,
-
   getNodeInfo: getNodeInfo,
   getFullNodeInfo: getFullNodeInfo,
   getNodeList: getNodeList,
@@ -545,6 +417,4 @@ var registry = module.exports = {
   getTypeId: getTypeId,
 
   saveNodeList: saveNodeList,
-
-  cleanModuleList: cleanModuleList,
 }

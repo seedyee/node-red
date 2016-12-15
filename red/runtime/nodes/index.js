@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-const when = require('when')
-const path = require('path')
-const fs = require('fs')
-
 const registry = require('./registry')
 const credentials = require('./credentials')
 const flows = require('./flows')
 const flowUtil = require('./flows/util')
 const context = require('./context')
 const Node = require('./Node')
-const log = require('../log')
-
-const events = require('../events')
-
-const child_process = require('child_process')
 
 let settings
 
@@ -40,15 +30,6 @@ let settings
  * @param opts - optional additional options for the node
  */
 function registerType(nodeSet, type, constructor, opts) {
-  if (typeof type !== 'string') {
-    // This is someone calling the api directly, rather than via the
-    // RED object provided to a node. Log a warning
-    log.warn(`${nodeSet} Deprecated call to RED.runtime.nodes.registerType - node-set name must be provided as first argument`)
-    opts = constructor
-    constructor = type
-    type = nodeSet
-    nodeSet = ''
-  }
   if (opts && opts.credentials) {
     credentials.register(type, opts.credentials)
   }
@@ -90,22 +71,6 @@ function init(runtime) {
   context.init(runtime.settings)
 }
 
-function disableNode(id) {
-  flows.checkTypeInUse(id)
-  return registry.disableNode(id)
-}
-
-function uninstallModule(module) {
-  var info = registry.getModuleInfo(module)
-  if (!info) {
-    throw new Error(log._('nodes.index.unrecognised-module', {module:module}))
-  }
-  info.nodes.forEach(node => {
-    flows.checkTypeInUse(`${module}/${node.name}`)
-  })
-  return registry.uninstallModule(module)
-}
-
 module.exports = {
   // Lifecycle
   init: init,
@@ -115,13 +80,6 @@ module.exports = {
   createNode: createNode,
   getNode: flows.get,
   eachNode: flows.eachNode,
-
-  paletteEditorEnabled: registry.paletteEditorEnabled,
-  installModule: registry.installModule,
-  uninstallModule: uninstallModule,
-
-  enableNode: registry.enableNode,
-  disableNode: disableNode,
 
   // Node type registry
   registerType: registerType,
@@ -149,8 +107,6 @@ module.exports = {
   getFlow:     flows.getFlow,
   updateFlow:  flows.updateFlow,
   removeFlow:  flows.removeFlow,
-  // disableFlow: flows.disableFlow,
-  // enableFlow:  flows.enableFlow,
 
   // Credentials
   addCredentials: credentials.add,

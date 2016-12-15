@@ -115,7 +115,6 @@ Node.prototype.close = function() {
 Node.prototype.send = function(msg) {
   var msgSent = false;
   var node;
-
   if (msg === null || typeof msg === "undefined") {
     return;
   } else if (!util.isArray(msg)) {

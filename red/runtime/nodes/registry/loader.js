@@ -210,19 +210,6 @@ function loadNodeSetList(nodes) {
   return registry.saveNodeList()
 }
 
-function addModule(module) {
-  if (!settings.available()) {
-    throw new Error('Settings unavailable')
-  }
-  const nodes = []
-  if (registry.getModuleInfo(module)) {
-    // TODO: nls
-    const e = new Error('module_already_loaded')
-    e.code = 'module_already_loaded'
-    return when.reject(e)
-  }
-}
-
 function loadNodeHelp(node,lang) {
   var dir = path.dirname(node.template)
   var base = path.basename(node.template)
@@ -257,6 +244,5 @@ function getNodeHelp(node, lang) {
 module.exports = {
   init: init,
   load: load,
-  addModule: addModule,
   getNodeHelp: getNodeHelp,
 }

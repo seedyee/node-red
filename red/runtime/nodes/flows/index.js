@@ -27,7 +27,6 @@ var flowUtil = require("./util");
 var log = require("../../log");
 var events = require("../../events");
 var redUtil = require("../../util");
-var deprecated = require("../registry/deprecated");
 
 var storage = null;
 var settings = null;
@@ -218,28 +217,6 @@ function start(type,diff,muteLog) {
   //dumpActiveNodes();
   type = type||"full";
   started = true;
-  var i;
-  if (activeFlowConfig.missingTypes.length > 0) {
-    log.info(log._("nodes.flows.missing-types"));
-    var knownUnknowns = 0;
-    for (i=0;i<activeFlowConfig.missingTypes.length;i++) {
-      var nodeType = activeFlowConfig.missingTypes[i];
-      var info = deprecated.get(nodeType);
-      if (info) {
-        log.info(log._("nodes.flows.missing-type-provided",{type:activeFlowConfig.missingTypes[i],module:info.module}));
-        knownUnknowns += 1;
-      } else {
-        log.info(" - "+activeFlowConfig.missingTypes[i]);
-      }
-    }
-    if (knownUnknowns > 0) {
-      log.info(log._("nodes.flows.missing-type-install-1"));
-      log.info("  npm install <module name>");
-      log.info(log._("nodes.flows.missing-type-install-2"));
-      log.info("  "+settings.userDir);
-    }
-    return when.resolve();
-  }
   if (!muteLog) {
     if (diff) {
       log.info(`flows modified ${type}`)
