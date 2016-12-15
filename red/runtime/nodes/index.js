@@ -92,7 +92,6 @@ module.exports = {
   getNodeConfigs: registry.getNodeConfigs,
   getNodeConfig: registry.getNodeConfig,
 
-  clearRegistry: registry.clear,
   cleanModuleList: registry.cleanModuleList,
 
   // Flow handling

@@ -224,18 +224,9 @@ function getNodeConstructor(type) {
   return null
 }
 
-function clear() {
-  nodeConfigCache = null
-  moduleConfigs = {}
-  nodeList = []
-  nodeConstructors = {}
-  nodeTypeToId = {}
-}
-
 const registry = module.exports = {
   init: init,
   load: load,
-  clear: clear,
 
   registerNodeConstructor: registerNodeConstructor,
   getNodeConstructor: getNodeConstructor,

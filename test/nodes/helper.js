@@ -108,14 +108,6 @@ module.exports = {
         });
     },
 
-    unload: function() {
-        // TODO: any other state to remove between tests?
-        redNodes.clearRegistry();
-        logSpy.restore();
-        context.clean({allNodes:[]});
-        return flows.stopFlows();
-    },
-
     getNode: function(id) {
         return flows.get(id);
     },
@@ -130,20 +122,20 @@ module.exports = {
         return request(RED.httpAdmin);
     },
 
-    startServer: function(done) {
-        server = http.createServer(function(req,res) { app(req,res); });
-        RED.init(server, {
-            SKIP_BUILD_CHECK: true,
-            logging:{console:{level:'off'}}
-        });
-        server.listen(listenPort, address);
-        server.on('listening', function() {
-            port = server.address().port;
-            url = 'http://' + address + ':' + port;
-            comms.start();
-            done();
-        });
-    },
+    // startServer: function(done) {
+    //     server = http.createServer(function(req,res) { app(req,res); });
+    //     RED.init(server, {
+    //         SKIP_BUILD_CHECK: true,
+    //         logging:{console:{level:'off'}}
+    //     });
+    //     server.listen(listenPort, address);
+    //     server.on('listening', function() {
+    //         port = server.address().port;
+    //         url = 'http://' + address + ':' + port;
+    //         comms.start();
+    //         done();
+    //     });
+    // },
 
     //TODO consider saving TCP handshake/server reinit on start/stop/start sequences
     stopServer: function(done) {

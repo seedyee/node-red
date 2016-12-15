@@ -17,14 +17,10 @@ function load() {
 module.exports = {
   init:init,
   load:load,
-  clear: registry.clear,
   registerType: registry.registerNodeConstructor,
-
   get: registry.getNodeConstructor,
   getNodeList: registry.getNodeList,
-
   getModuleInfo: registry.getModuleInfo,
-
   getNodeConfigs: registry.getAllNodeConfigs,
   getNodeConfig: registry.getNodeConfig,
 }
