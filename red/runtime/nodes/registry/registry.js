@@ -96,12 +96,6 @@ function addNodeSet(set) {
   nodeConfigCache = null
 }
 
-
-function getNodeInfo(typeOrId) {
-  var id = nodeTypeToId[typeOrId]
-  return null
-}
-
 function getFullNodeInfo(typeOrId) {
   // Used by index.enableNodeSet so that .file can be retrieved to pass
   // to loader.loadNodeSet
@@ -278,7 +272,6 @@ var registry = module.exports = {
   getNodeConstructor: getNodeConstructor,
 
   addNodeSet: addNodeSet,
-  getNodeInfo: getNodeInfo,
   getFullNodeInfo: getFullNodeInfo,
   getNodeList: getNodeList,
   getModuleList: getModuleList,

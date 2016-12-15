@@ -62,16 +62,10 @@ function loadNodeFiles(nodeFiles) {
 function loadNodeConfig(nodeMeta) {
   const { file, module, name, version  } = nodeMeta
   const id = `${module}/${name}`
-  const info = registry.getNodeInfo(id)
   const template = file.replace(/\.js$/,'.html')
   let isEnabled = true
 
   return when.promise(function(resolve) {
-    if (info) {
-      if (info.hasOwnProperty('loaded')) throw new Error(`${file} already loaded`)
-      isEnabled = info.enabled
-    }
-
     const node = {
       id,
       module,

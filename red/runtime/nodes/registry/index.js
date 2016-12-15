@@ -37,7 +37,6 @@ module.exports = {
   registerType: registry.registerNodeConstructor,
 
   get: registry.getNodeConstructor,
-  getNodeInfo: registry.getNodeInfo,
   getNodeList: registry.getNodeList,
 
   getModuleInfo: registry.getModuleInfo,

@@ -85,7 +85,6 @@ module.exports = {
   registerType: registerType,
   getType: registry.get,
 
-  getNodeInfo: registry.getNodeInfo,
   getNodeList: registry.getNodeList,
 
   getModuleInfo: registry.getModuleInfo,
