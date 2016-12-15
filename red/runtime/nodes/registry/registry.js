@@ -41,7 +41,22 @@ function init(_settings, _loader) {
 }
 
 function load() {
-  moduleConfigs = loadNodeConfigs()
+  moduleConfigs = settings.get('nodes')
+}
+
+function getNodeConfig(id,lang) {
+  var config = moduleConfigs[getModule(id)]
+  if (!config) {
+    return null
+  }
+  config = config.nodes[getNode(id)]
+  if (config) {
+    var result = config.config
+    result += loader.getNodeHelp(config,lang||'en-US')
+    return result
+  } else {
+    return null
+  }
 }
 
 function filterNodeInfo(n) {
@@ -61,8 +76,6 @@ function filterNodeInfo(n) {
   return r
 }
 
-
-
 function getModule(id) {
   const parts = id.split('/')
   return parts.slice(0, parts.length-1).join('/')
@@ -77,7 +90,6 @@ function saveNodeList() {
   var moduleList = {}
 
   for (var module in moduleConfigs) {
-    /* istanbul ignore else */
     if (moduleConfigs.hasOwnProperty(module)) {
       if (Object.keys(moduleConfigs[module].nodes).length > 0) {
         if (!moduleList[module]) {
@@ -104,55 +116,8 @@ function saveNodeList() {
       }
     }
   }
-  if (settings.available()) {
-    return settings.set('nodes',moduleList)
-  } else {
-    return when.reject('Settings unavailable')
-  }
-}
 
-function loadNodeConfigs() {
-  var configs = settings.get('nodes')
-
-  if (!configs) {
-    return {}
-  } else if (configs['node-red']) {
-    return configs
-  } else {
-    // Migrate from the 0.9.1 format of settings
-    var newConfigs = {}
-    for (var id in configs) {
-      /* istanbul ignore else */
-      if (configs.hasOwnProperty(id)) {
-        var nodeConfig = configs[id]
-        var moduleName
-        var nodeSetName
-
-        if (nodeConfig.module) {
-          moduleName = nodeConfig.module
-          nodeSetName = nodeConfig.name.split(':')[1]
-        } else {
-          moduleName = 'node-red'
-          nodeSetName = nodeConfig.name.replace(/^\d+-/,'').replace(/\.js$/,'')
-        }
-
-        if (!newConfigs[moduleName]) {
-          newConfigs[moduleName] = {
-            name: moduleName,
-            nodes:{}
-          }
-        }
-        newConfigs[moduleName].nodes[nodeSetName] = {
-          name: nodeSetName,
-          types: nodeConfig.types,
-          enabled: nodeConfig.enabled,
-          module: moduleName
-        }
-      }
-    }
-    settings.set('nodes',newConfigs)
-    return newConfigs
-  }
+  return settings.set('nodes', moduleList)
 }
 
 function addNodeSet(set) {
@@ -342,21 +307,6 @@ function getAllNodeConfigs(lang) {
     nodeConfigCache = result
   }
   return nodeConfigCache
-}
-
-function getNodeConfig(id,lang) {
-  var config = moduleConfigs[getModule(id)]
-  if (!config) {
-    return null
-  }
-  config = config.nodes[getNode(id)]
-  if (config) {
-    var result = config.config
-    result += loader.getNodeHelp(config,lang||'en-US')
-    return result
-  } else {
-    return null
-  }
 }
 
 function getNodeConstructor(type) {
