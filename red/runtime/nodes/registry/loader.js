@@ -32,7 +32,7 @@ function init(_runtime) {
   localfilesystem.init(runtime)
 }
 
-function load(defaultNodesDir, disableNodePathScan) {
+function load() {
   const nodeFiles = localfilesystem.getNodeFiles()
   return loadNodeFiles(nodeFiles)
 }

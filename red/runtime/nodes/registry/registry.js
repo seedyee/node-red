@@ -88,26 +88,9 @@ function getNode(id) {
 
 function addNodeSet(set) {
   const { id, version } = set
-  if (!set.err) {
-    set.types.forEach(function(t) {
-      nodeTypeToId[t] = id
-    })
-  }
   moduleNodes[set.module] = moduleNodes[set.module]||[]
   moduleNodes[set.module].push(set.name)
-
-  if (!moduleConfigs[set.module]) {
-    moduleConfigs[set.module] = {
-      name: set.module,
-      nodes: {}
-    }
-  }
-
-  if (version) {
-    moduleConfigs[set.module].version = version
-  }
   moduleConfigs[set.module].local = set.local
-
   moduleConfigs[set.module].nodes[set.name] = set
   nodeList.push(id)
   nodeConfigCache = null
@@ -115,25 +98,7 @@ function addNodeSet(set) {
 
 
 function getNodeInfo(typeOrId) {
-  var id = typeOrId
-  if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId]
-  }
-  /* istanbul ignore else */
-  if (id) {
-    var module = moduleConfigs[getModule(id)]
-    if (module) {
-      var config = module.nodes[getNode(id)]
-      if (config) {
-        var info = filterNodeInfo(config)
-        if (config.hasOwnProperty('loaded')) {
-          info.loaded = config.loaded
-        }
-        info.version = module.version
-        return info
-      }
-    }
-  }
+  var id = nodeTypeToId[typeOrId]
   return null
 }
 
@@ -300,11 +265,7 @@ function clear() {
 }
 
 function getTypeId(type) {
-  if (nodeTypeToId.hasOwnProperty(type)) {
-    return nodeTypeToId[type]
-  } else {
-    return null
-  }
+  return nodeTypeToId[type]
 }
 
 

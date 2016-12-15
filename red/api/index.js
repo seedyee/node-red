@@ -133,14 +133,7 @@ function init(_server, _runtime) {
 
   // Nodes
   adminApp.get('/nodes', needsPermission('nodes.read'),nodes.getAll,errorHandler)
-  adminApp.post('/nodes', needsPermission('nodes.write'),nodes.post,errorHandler)
 
-  adminApp.get(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/, needsPermission('nodes.read'),nodes.getModule,errorHandler)
-  adminApp.put(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/, needsPermission('nodes.write'),nodes.putModule,errorHandler)
-  adminApp.delete(/\/nodes\/((@[^\/]+\/)?[^\/]+)$/, needsPermission('nodes.write'),nodes.delete,errorHandler)
-
-  adminApp.get(/\/nodes\/((@[^\/]+\/)?[^\/]+)\/([^\/]+)$/, needsPermission('nodes.read'),nodes.getSet,errorHandler)
-  adminApp.put(/\/nodes\/((@[^\/]+\/)?[^\/]+)\/([^\/]+)$/, needsPermission('nodes.write'),nodes.putSet,errorHandler)
   adminApp.get('/credentials/:type/:id', needsPermission('credentials.read'),credentials.get,errorHandler)
 
   adminApp.get(/locales\/(.+)\/?$/,locales.get,errorHandler)
