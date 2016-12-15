@@ -97,20 +97,10 @@ function addNodeSet(set) {
 }
 
 function getFullNodeInfo(typeOrId) {
-  // Used by index.enableNodeSet so that .file can be retrieved to pass
-  // to loader.loadNodeSet
-  var id = typeOrId
-  if (nodeTypeToId.hasOwnProperty(typeOrId)) {
-    id = nodeTypeToId[typeOrId]
+  const module = moduleConfigs[getModule(typeOrId)]
+  if (module) {
+    return module.nodes[getNode(typeOrId)]
   }
-  /* istanbul ignore else */
-  if (id) {
-    var module = moduleConfigs[getModule(id)]
-    if (module) {
-      return module.nodes[getNode(id)]
-    }
-  }
-  return null
 }
 
 function getNodeList(filter) {
@@ -242,12 +232,7 @@ function clear() {
   nodeTypeToId = {}
 }
 
-function getTypeId(type) {
-  return nodeTypeToId[type]
-}
-
-
-var registry = module.exports = {
+const registry = module.exports = {
   init: init,
   load: load,
   clear: clear,
@@ -266,6 +251,4 @@ var registry = module.exports = {
    */
   getAllNodeConfigs: getAllNodeConfigs,
   getNodeConfig: getNodeConfig,
-
-  getTypeId: getTypeId,
 }
