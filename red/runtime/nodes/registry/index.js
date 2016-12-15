@@ -30,10 +30,6 @@ function load() {
   return loader.load()
 }
 
-function paletteEditorEnabled() {
-  return true
-}
-
 module.exports = {
   init:init,
   load:load,
@@ -49,6 +45,4 @@ module.exports = {
 
   getNodeConfigs: registry.getAllNodeConfigs,
   getNodeConfig: registry.getNodeConfig,
-
-  paletteEditorEnabled,
 }
