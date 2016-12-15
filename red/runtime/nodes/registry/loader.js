@@ -207,7 +207,6 @@ function loadNodeSetList(nodes) {
       node.err = err
     }
   })
-  return registry.saveNodeList()
 }
 
 function loadNodeHelp(node,lang) {

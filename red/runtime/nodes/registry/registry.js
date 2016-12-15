@@ -86,40 +86,6 @@ function getNode(id) {
   return parts[parts.length - 1]
 }
 
-function saveNodeList() {
-  var moduleList = {}
-
-  for (var module in moduleConfigs) {
-    if (moduleConfigs.hasOwnProperty(module)) {
-      if (Object.keys(moduleConfigs[module].nodes).length > 0) {
-        if (!moduleList[module]) {
-          moduleList[module] = {
-            name: module,
-            version: moduleConfigs[module].version,
-            local: moduleConfigs[module].local||false,
-            nodes: {}
-          }
-        }
-        var nodes = moduleConfigs[module].nodes
-        for(var node in nodes) {
-          /* istanbul ignore else */
-          if (nodes.hasOwnProperty(node)) {
-            var config = nodes[node]
-            var n = filterNodeInfo(config)
-            delete n.err
-            delete n.file
-            delete n.id
-            n.file = config.file
-            moduleList[module].nodes[node] = n
-          }
-        }
-      }
-    }
-  }
-
-  return settings.set('nodes', moduleList)
-}
-
 function addNodeSet(set) {
   const { id, version } = set
   if (!set.err) {
@@ -365,6 +331,4 @@ var registry = module.exports = {
   getNodeConfig: getNodeConfig,
 
   getTypeId: getTypeId,
-
-  saveNodeList: saveNodeList,
 }
